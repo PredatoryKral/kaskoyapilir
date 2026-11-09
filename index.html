@@ -164,26 +164,36 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
 
 #nav2 button{font-size:.6rem}#nav2 span{white-space:nowrap}
 #prog>*:not(#prog2){display:none!important}
+html{background:var(--g1);overscroll-behavior-y:none}
+body{background:var(--g1)!important;overscroll-behavior-y:none;min-height:100vh;min-height:100dvh}
+body:not([data-tab="plan"]) .top2{display:none}
+.top2 .rowb{display:flex;gap:8px;align-items:center}
+.logo-btn{width:44px;height:44px;padding:0;border-radius:50%;overflow:hidden;border:2px solid var(--line);flex:none;background:none;box-shadow:none}
+.logo-btn img{width:100%;height:100%;object-fit:cover;display:block}
+#nav2{transform:translateZ(0);-webkit-transform:translateZ(0)}
+.spn{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fsnow{position:absolute;top:calc(24px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;font-size:1.6rem;font-weight:600;color:var(--mut)}
 </style>
 </head>
-<body>
+<body data-tab="plan">
 <div id="mdl" class="hide"></div>
-<div id="fsT" class="hide"><div class="fsc" id="fsClock">00:00:00</div><div class="fsb"><button data-act="tmT" id="fsTb">Başlat</button><button class="ghost" data-act="tmS">Kaydet</button><button class="ghost" data-act="tmR">Sıfırla</button><button class="ghost" data-act="tmX">Çık</button></div></div>
+<div id="fsT" class="hide"><div class="fsnow" id="fsNow"></div><div class="fsc" id="fsClock">00:00:00</div><div class="fsb"><button data-act="tmT" id="fsTb">Başlat</button><button class="ghost" data-act="tmS">Kaydet</button><button class="ghost" data-act="tmR">Sıfırla</button><button class="ghost" data-act="tmX">Çık</button></div></div>
 <div id="auth"><div class="card authbox">
   <div class="brand" style="margin-bottom:6px"><div><div class="name" style="font-size:1.6rem;letter-spacing:.03em">KASKO YAPILIR</div><div class="king">KING OF GAMES</div><div class="date">Giriş yap, verilerin her cihazda seninle olsun</div></div></div>
   <div class="authtabs"><button id="aTabL" class="on">Giriş yap</button><button id="aTabR">Kayıt ol</button></div>
-  <input type="text" id="aUser" placeholder="Kullanıcı adı" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
-  <input type="password" id="aPass" placeholder="Şifre (en az 6 karakter)" autocomplete="current-password">
+  <form id="aForm" autocomplete="on"><input type="text" id="aUser" name="username" placeholder="Kullanıcı adı" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+  <input type="password" id="aPass" name="password" placeholder="Şifre (en az 6 karakter)" autocomplete="current-password">
   <div id="aInvRow" class="hide"><input type="text" id="aInv" placeholder="Davet kodu (varsa)" autocomplete="off"></div>
   <label class="pm"><input type="checkbox" id="aRem" checked> Beni hatırla (90 gün)</label>
-  <button id="aGo" style="width:100%">Giriş yap</button>
+  <button id="aGo" type="submit" style="width:100%">Giriş yap</button></form>
   <div id="aMsg" style="margin-top:8px;color:var(--bad);font-size:.9rem"></div>
 </div></div>
 <div class="wrap">
-  <header class="top2"><div><h1>KASKO YAPILIR</h1><div class="date" id="today"></div></div><button class="ghost icon" id="themeBtn" title="Açık/koyu tema"></button></header>
+  <header class="top2"><div><h1>KASKO YAPILIR</h1><div class="date" id="today"></div></div><div class="rowb"><button class="logo-btn" data-act="yz" title="Yapay zekâ"><img src="/logo.jpg" alt="Yapay zekâ"></button><button class="ghost icon" id="themeBtn" title="Açık/koyu tema"></button></div></header>
   <nav id="nav2"></nav>
   <nav class="tabs" id="tabs">
-    <button data-t="sira"><i></i><span></span></button><button data-t="admin"><i></i><span></span></button><button data-t="ozet"><i></i><span></span></button><button data-t="plan" class="on"><i></i><span>Ödevler</span></button><button data-t="ders"><i></i><span>Dershane</span></button><button data-t="calis"><i></i><span>Çalışma</span></button><button data-t="prog"><i></i><span>Program</span></button><button data-t="deneme"><i></i><span>Denemeler</span></button><button data-t="analiz"><i></i><span>Analiz</span></button><button data-t="yan"><i></i><span>Yanlışlar</span></button><button data-t="konu"><i></i><span>Konular</span></button><button data-t="rapor"><i></i><span>Rapor</span></button><button data-t="soru"><i></i><span>Soru sor</span></button><button data-t="yedek"><i></i><span>Yedek</span></button>
+    <button data-t="sira"><i></i><span></span></button><button data-t="admin"><i></i><span></span></button><button data-t="yz"><i></i><span></span></button><button data-t="ozet"><i></i><span></span></button><button data-t="plan" class="on"><i></i><span>Ödevler</span></button><button data-t="ders"><i></i><span>Dershane</span></button><button data-t="calis"><i></i><span>Çalışma</span></button><button data-t="prog"><i></i><span>Program</span></button><button data-t="deneme"><i></i><span>Denemeler</span></button><button data-t="analiz"><i></i><span>Analiz</span></button><button data-t="yan"><i></i><span>Yanlışlar</span></button><button data-t="konu"><i></i><span>Konular</span></button><button data-t="rapor"><i></i><span>Rapor</span></button><button data-t="soru"><i></i><span>Soru sor</span></button><button data-t="yedek"><i></i><span>Yedek</span></button>
   </nav>
 
   <!-- ÖDEVLER -->
@@ -275,6 +285,7 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
     <div class="card"><h2> Konu takibi</h2><div id="kSum"></div></div><div id="kList"></div>
   </section>
   <section id="sira" class="hide"><div class="card"><h2>Sıralama</h2><div id="siraOut"></div></div></section>
+  <section id="yz" class="hide"><div class="card"><h2>Yapay zekâ</h2><textarea id="yzQ" rows="3" placeholder="Takıldığın soruyu ya da konuyu yaz…"></textarea><div class="row"><input type="file" id="yzImg" accept="image/*"><button id="yzGo">Sor</button></div></div><div id="yzList"></div></section>
   <section id="admin" class="hide"><div class="card"><h2>Yönetici paneli</h2><div id="admOut"></div></div></section>
   <section id="ozet" class="hide"><div id="ozOut"></div></section>
   <section id="rapor" class="hide">
@@ -312,8 +323,8 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
   if(imgs.length){var parts=[];for(var i=0;i<imgs.length;i++){var bl=await shrink(imgs[i]);parts.push({type:"image",source:{type:"base64",media_type:bl.type||"image/jpeg",data:await b64(bl)}})}
    var last=msgs[msgs.length-1];parts.push({type:"text",text:String(last.content)});last.content=parts}
   var r=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json","x-token":getToken()},body:JSON.stringify({messages:msgs,json:!!wantJson})});
-  if(r.status===401){alert("Oturum yok ya da süresi doldu. Tekrar giriş yap.");throw new Error("unauthorized")}if(r.status===429){alert("Bugünkü yapay zekâ kullanım limitin doldu. Yarın tekrar dene.");throw new Error("limit")}
-  if(!r.ok){var ej={};try{ej=await r.json()}catch(x){}alert("Yapay zekâ hatası ("+r.status+"): "+(ej.error||"bilinmiyor"));throw new Error("api "+r.status)}
+  if(r.status===401)throw new Error("Oturum yok ya da süresi doldu. Tekrar giriş yap.");if(r.status===429)throw new Error("Bugünkü yapay zekâ kullanım limitin doldu. Yarın tekrar dene.");
+  if(!r.ok){var ej={};try{ej=await r.json()}catch(x){}throw new Error("Yapay zekâ hatası ("+r.status+"): "+(ej.error||"bilinmiyor"))}
   var d=await r.json(),text=d.text||"";
   if(opts&&opts.onText)opts.onText({text:text});
   if(!wantJson)return{text:text};
@@ -338,7 +349,7 @@ var T=iso(new Date()),TM=addDays(1);
 $("today").textContent=new Date().toLocaleDateString("tr-TR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 
 var GENEL="Genel çalışma";
-var SUBJ=["Türkçe","Matematik","Geometri","Fizik","Kimya","Biyoloji","Edebiyat","Tarih","Coğrafya","Felsefe","Din Kültürü","İngilizce"];
+var SUBJ=["Türkçe","Matematik","Geometri","Fizik","Kimya","Biyoloji","Tarih","Coğrafya","Felsefe","Din Kültürü"];
 var EXAMS={
  "TYT":[["Türkçe",40],["Sosyal Bilimler",20],["Temel Matematik",40],["Fen Bilimleri",20]],
  "AYT Sayısal":[["Matematik",40],["Fizik",14],["Kimya",13],["Biyoloji",13]],
@@ -798,15 +809,15 @@ $("aTabL").onclick=function(){setMode("login")};$("aTabR").onclick=function(){se
 async function authGo(){
  var u=$("aUser").value.trim(),p=$("aPass").value;
  if(!u||!p){$("aMsg").textContent="Kullanıcı adı ve şifre gerekli.";return}
- $("aGo").disabled=true;$("aMsg").textContent="Bekle…";
+ $("aGo").disabled=true;$("aGo").innerHTML='<span class="spn"></span> Bekle';$("aMsg").textContent="";
  try{var r=await api(amode,{username:u,password:p,invite:$("aInv").value.trim(),remember:$("aRem").checked,token:""});
   if(!r.ok){$("aMsg").textContent=r.error||"Bir hata oluştu."}
-  else{setToken(r.token,$("aRem").checked);var l=await api("load");
+  else{setToken(r.token,$("aRem").checked);var l=r.t!==undefined?{ok:true,data:r.data,t:r.t,username:r.username}:await api("load");
    if(l.ok){await reconcile(l,l.username);hideAuth();$("aPass").value=""}else $("aMsg").textContent="Veriler yüklenemedi."}}
  catch(e){$("aMsg").textContent=e&&e.notjson?"Sunucu beklenen yanıtı vermedi: Apps Script’e yeni kodu yapıştırıp Dağıt > Dağıtımları yönet > Yeni sürüm yapman gerekiyor (önce editörde bir kez Çalıştır ile izin ver).":"Sunucuya ulaşılamadı: dağıtımda Erişim “Herkes” olmalı ve URL /exec ile bitmeli."}
- $("aGo").disabled=false}
-$("aGo").onclick=authGo;
-$("auth").addEventListener("keydown",function(e){if(e.key==="Enter")authGo()});
+ $("aGo").disabled=false;$("aGo").textContent=amode==="login"?"Giriş yap":"Hesap oluştur"}
+
+
 $("acSync").onclick=function(){push(true)};
 $("acOut").onclick=async function(){
  if(!confirm("Çıkış yapılsın mı? Bu cihazdaki veriler silinir, bulutta kalır."))return;
@@ -817,7 +828,7 @@ window.addEventListener("online",function(){if(ME&&lsGet("yks-dirty"))push(false
 async function boot(){
  if(!getToken()){showAuth();return}
  try{var r=await api("load");
-  if(r.ok){await reconcile(r,r.username);hideAuth()}
+  if(r.ok){await reconcile(r,r.username);hideAuth();setTimeout(loadBoardQuiet,800)}
   else{clearToken();showAuth(r.auth===false?"Oturum süresi doldu, tekrar giriş yap.":"")}}
  catch(e){ME=lsGet("yks-user")||"";if(ME){hideAuth();renderAcc();syMsg("Çevrimdışı çalışılıyor.")}else showAuth("Bağlantı kurulamadı.")}}
 
@@ -850,7 +861,7 @@ function mQ(ders,title,rk,n){openModal('<h2>'+esc(title)+'</h2><div class="row">
 function mRut(){var days=[["Pt",1],["Sa",2],["Ça",3],["Pe",4],["Cu",5],["Ct",6],["Pz",0]];
  openModal('<h2>Rutinler</h2>'+(S.rutin.length?S.rutin.map(function(r){return'<div class="task"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small>'+esc(r.ders)+' · '+(r.days.length===7?"her gün":days.filter(function(d){return r.days.indexOf(d[1])>=0}).map(function(d){return d[0]}).join(" "))+'</small></div><button class="x" data-m="delR" data-id="'+r.id+'">✕</button></div>'}).join(""):'<div class="empty">Henüz rutin yok.</div>')+
  '<h3>Yeni rutin</h3><input type="text" id="rT" value="Paragraf" style="width:100%;margin-bottom:8px"><div class="row"><select id="rD">'+opts(SUBJ,"Türkçe")+'</select><input type="number" id="rN" min="1" value="20" style="width:90px"><span style="color:var(--mut)">soru</span></div><div class="row">'+days.map(function(d){return'<label class="pill"><input type="checkbox" class="rd" value="'+d[1]+'" checked> '+d[0]+'</label>'}).join("")+'</div><div class="row"><button data-m="addR">Rutin ekle</button><button class="ghost" data-m="close">Kapat</button></div>')}
-function mMore(){var it=[["konu","book","Konular"],["ders","up","Fotoğraftan ödev ekle"],["soru","chat","Soru sor"],["yedek","user","Hesap ve yedek"],["admin","user","Yönetici paneli"]];
+function mMore(){var it=[["konu","book","Konular"],["ders","up","Fotoğraftan ödev ekle"],["yz","chat","Yapay zekâ"],["yedek","user","Hesap ve yedek"],["admin","user","Yönetici paneli"]];
  openModal('<h2>Daha fazla</h2>'+it.map(function(x){return'<button class="mi" data-m="goto" data-t="'+x[0]+'">'+ic(x[1],22)+'<span>'+x[2]+'</span>'+ic("chev",18)+'</button>'}).join("")+'<button class="mi" data-m="rutin">'+ic("repeat",22)+'<span>Rutinler</span>'+ic("chev",18)+'</button>')}
 $("mdl").addEventListener("click",function(e){if(e.target.id==="mdl"){closeModal();return}
  var b=e.target.closest("[data-m]");if(!b)return;var m=b.getAttribute("data-m");
@@ -872,7 +883,7 @@ $("nav2").innerHTML=NAVI.map(function(n){return'<button data-go="'+n[0]+'">'+ic(
 function navSync(t){Array.prototype.forEach.call($("nav2").children,function(b){var g=b.getAttribute("data-go");b.classList.toggle("on",g===t||(g==="more"&&["plan","prog","deneme","analiz","sira","ozet"].indexOf(t)<0))})}
 $("nav2").addEventListener("click",function(e){var b=e.target.closest("[data-go]");if(!b)return;var t=b.getAttribute("data-go");if(t==="more"){mMore();return}go(t);navSync(t)});
 navSync("plan");
-$("tabs").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var t=b.getAttribute("data-t");if(t==="ozet")renderOzet();if(t==="sira")loadBoard();if(t==="plan")renderHome();if(t==="admin")renderAdmin();if(t==="prog")renderProg2()});
+$("tabs").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var t=b.getAttribute("data-t");if(t==="ozet")renderOzet();if(t==="sira")loadBoard();if(t==="plan")renderHome();if(t==="admin")renderAdmin();if(t==="prog")renderProg2();if(t==="yz")renderYz()});
 
 /* sayaç */
 var T2={el:0,run:false,t0:0,subj:"Genel çalışma"},wl2=null;
@@ -892,13 +903,14 @@ function trow2(t){return'<div class="task'+(t.done?" done":"")+'"><input type="c
 function rrow(r,d){var k=r.id+"|"+d,dn=!!S.rdone[k];return'<div class="task'+(dn?" done":"")+'"><input type="checkbox" '+(dn?"checked":"")+' data-rk="'+k+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+'</small></div></div>'}
 function renderHome(){
  var wd=wkDays(0),late=S.tasks.filter(function(t){return!t.done&&t.due<wd[0]}),h='';
- h+='<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Bu haftanın ödevleri</h2><div class="row" style="margin:0"><button class="sm" data-act="add">'+ic("plus",15)+' Ödev</button></div></div>'+
+ h+='<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Bu haftanın ödevleri</h2><div class="row" style="margin:0"><button class="ghost sm" data-act="sg">Soru gir</button><button class="sm" data-act="add">'+ic("plus",15)+' Ödev</button></div></div>'+
   '';
  if(late.length)h+='<div class="grp bad">Geçen haftalardan kalan ('+late.length+')</div>'+late.map(trow2).join("");
- wd.forEach(function(d,i){var ts=S.tasks.filter(function(t){return t.due===d}),rs=S.rutin.filter(function(r){return rutDay(r,d)}),tdy=d===T;
+ todayFirst(wd).forEach(function(d){var i=wd.indexOf(d),ts=S.tasks.filter(function(t){return t.due===d}),rs=S.rutin.filter(function(r){return rutDay(r,d)}),tdy=d===T;
   h+='<div class="grp'+(tdy?" today":"")+'">'+DN[i]+' '+fd(d)+(tdy?' · bugün':'')+'</div>';
   if(!ts.length&&!rs.length){h+='<div class="empty">—</div>';return}
   h+=ts.map(trow2).join("")+rs.map(function(r){return rrow(r,d)}).join("")});
+ var fut=S.tasks.filter(function(t){return!t.done&&t.due>wd[6]}).sort(function(a,b){return a.due>b.due?1:-1});if(fut.length)h+='<h3>Sonraki günler</h3>'+futHtml(fut,trow2);
  h+='</div>';
  var rg0=prange(HP),inR0=function(d){return d>=rg0.from&&d<=rg0.to},wm=sum(S.logs.filter(function(l){return inR0(l.date)}),function(l){return l.sec/60}),sq=S.sorular.filter(function(s){return inR0(s.date)}),wq=sum(sq,function(s){return s.n}),kn0=sq.filter(function(s){return s.d!=null}),wd2=sum(kn0,function(s){return s.d}),wy2=sum(kn0,function(s){return s.n-s.d});
  h+='<div class="card" style="margin-top:12px"><div class="row" style="justify-content:space-between"><b>Çalışma sayacı</b><select id="tmSubj">'+opts([GENEL].concat(SUBJ),T2.subj)+'</select></div><div class="timer" id="tmClock">'+fmt(tmNow())+'</div><div class="row" style="justify-content:center"><button data-act="tmT" id="tmTb"></button><button class="ghost" data-act="tmS">Kaydet</button><button class="ghost" data-act="tmR">Sıfırla</button><button class="ghost icon" data-act="tmF" title="Tam ekran">'+ic("full",18)+'</button></div></div>'+
@@ -917,7 +929,7 @@ document.addEventListener("click",function(e){var el=e.target.closest("[data-act
   case"cnt":S.sayac[a[1]]++;save();renderHome();break;case"cmin":S.sayac[a[1]]=Math.max(0,S.sayac[a[1]]-1);save();renderHome();break;
   case"tmT":tmToggle();break;case"tmS":tmSave();break;case"tmR":tmReset();break;case"tmF":fsOpen();break;case"tmX":fsClose();break;
   case"per":OZ.p=a[1];renderOzet();break;case"pdf":window.print();break;case"ozAi":ozAi();break;
-  case"bc":BD.c=a[1];renderBoard();break;case"bp":BD.p=a[1];loadBoard();break;case"hp":HP=a[1];renderHome();break;case"ap":AD.p=a[1];loadAdmin();break;case"admGo":AD.pw=$("admPw").value;loadAdmin();break;case"res":mResK(a[1]);break;case"edt":mEditT(a[1]);break;case"edr":mEditR(a[1]);break;case"sc":mShort(parseInt(a[1],10));break;case"pdd":mAdd(a[1]);break;case"adm":admAct(a[1],a[2]);break;case"admNew":admNew();break;case"opd":S.program[a[1]]=(S.program[a[1]]||[]).filter(function(x){return String(x.id)!==a[2]});save();renderProg2();break}});
+  case"bc":BD.c=a[1];renderBoard();break;case"bp":BD.p=a[1];loadBoard();break;case"hp":HP=a[1];renderHome();break;case"ap":AD.p=a[1];loadAdmin();break;case"admGo":AD.pw=$("admPw").value;loadAdmin();break;case"res":mResK(a[1]);break;case"edt":mEditT(a[1]);break;case"edr":mEditR(a[1]);break;case"sc":mShort(parseInt(a[1],10));break;case"pdd":mAdd(a[1]);break;case"adm":admAct(a[1],a[2]);break;case"admNew":admNew();break;case"opd":S.program[a[1]]=(S.program[a[1]]||[]).filter(function(x){return String(x.id)!==a[2]});save();renderProg2();break;case"sg":mSoru();break;case"yz":go("yz");navSync("yz");break;case"aidel":S.ai=S.ai.filter(function(x){return String(x.id)!==a[1]});save();renderYz();break;case"aiclr":if(confirm("Tüm yapay zekâ geçmişi silinsin mi?")){S.ai=[];save();renderYz()}break}});
 
 /* özet */
 var OZ={p:"week"},ozData=null;
@@ -952,7 +964,7 @@ async function loadBoard(){BD.u=null;BD.err="";renderBoard();
 function renderBoard(){var el=$("siraOut"),btn=function(on,a,t){return'<button class="'+(on?"":"ghost ")+'sm" data-act="'+a+'">'+t+'</button>'};
  var h='<div class="row">'+btn(BD.c==="min","bc:min","Çalışma süresi")+btn(BD.c==="q","bc:q","Çözülen soru")+'</div><div class="row">'+btn(BD.p==="w","bp:w","Bu hafta")+btn(BD.p==="t","bp:t","Tümü")+'</div>';
  if(BD.err)h+='<div class="empty">'+esc(BD.err)+'</div>';
- else if(!BD.u)h+='<div class="empty">Yükleniyor…</div>';
+ else if(!BD.u)h+='<div class="empty"><span class="spn"></span> Yükleniyor…</div>';
  else{var key=(BD.c==="min"?"":"")+(BD.c==="min"?(BD.p==="w"?"wMin":"tMin"):(BD.p==="w"?"wQ":"tQ")),l=BD.u.slice().sort(function(a,b){return b[key]-a[key]}),mx=l.length&&l[0][key]?l[0][key]:1;
   h+=l.map(function(x,i){var me=x.u===ME;return'<div class="task" style="'+(me?"outline:2px solid var(--ink)":"")+'"><b style="width:26px">'+(i+1)+'</b><div class="t"><div>'+esc(x.u)+(me?" (sen)":"")+'</div><div class="bar"><i style="width:'+x[key]/mx*100+'%"></i></div></div><b>'+(BD.c==="min"?fmtMin(x[key]):x[key]+" soru")+'</b></div>'}).join("")||'<div class="empty">Henüz veri yok.</div>'}
  el.innerHTML=h}
@@ -977,7 +989,7 @@ function renderBoard(){var el=$("siraOut"),btn=function(on,a,t){return'<button c
  var h='<div class="row">'+btn(BD.c==="min","bc:min","Çalışma süresi")+btn(BD.c==="q","bc:q","Çözülen soru")+btn(BD.c==="c31","bc:c31","31")+'</div>';
  h+=BD.c==="c31"?'<div class="empty" style="padding:0 0 8px">31 sıralaması tüm zamanların toplamıdır.</div>':'<div class="row">'+pch("bp",BD.p,["week","w5","m1","all"])+'</div>';
  if(BD.err)h+='<div class="empty">'+esc(BD.err)+'</div>';
- else if(!BD.u)h+='<div class="empty">Yükleniyor…</div>';
+ else if(!BD.u)h+='<div class="empty"><span class="spn"></span> Yükleniyor…</div>';
  else{var key=BD.c,l=BD.u.slice().sort(function(a,b){return b[key]-a[key]}),mx=l.length&&l[0][key]?l[0][key]:1;
   h+=l.map(function(x,i){var me=x.u===ME;return'<div class="task" style="'+(me?"outline:2px solid var(--ink)":"")+'"><b style="width:26px">'+(i+1)+'</b><div class="t"><div>'+esc(x.u)+(me?" (sen)":"")+'</div><div class="bar"><i style="width:'+x[key]/mx*100+'%"></i></div></div><b>'+(key==="min"?fmtMin(x[key]):key==="q"?x[key]+" soru":x[key])+'</b></div>'}).join("")||'<div class="empty">Henüz veri yok.</div>'}
  el.innerHTML=h}
@@ -988,7 +1000,7 @@ function renderAdmin(){var el=$("admOut");
  if(!AD.pw){el.innerHTML='<div class="row"><input type="password" id="admPw" placeholder="Yönetici şifresi" style="flex:1 1 200px" autocomplete="off"><button data-act="admGo">Aç</button></div>'+(AD.err?'<div class="empty">'+esc(AD.err)+'</div>':"");return}
  var h='<div class="row">'+pch("ap",AD.p,["week","last","w5","m1","all"])+'<button class="sm" data-act="admNew">Yeni hesap</button></div>';
  if(AD.err)h+='<div class="empty">'+esc(AD.err)+'</div>';
- else if(!AD.u)h+='<div class="empty">Yükleniyor…</div>';
+ else if(!AD.u)h+='<div class="empty"><span class="spn"></span> Yükleniyor…</div>';
  else h+=AD.u.map(admUser).join("")||'<div class="empty">Kullanıcı yok.</div>';
  el.innerHTML=h}
 async function loadAdmin(){AD.u=null;AD.err="";renderAdmin();var r0=prange(AD.p);
@@ -1036,16 +1048,16 @@ function saveRes(k){var i=resInfo(k);if(!i)return;var d=parseInt($("xD").value,1
  markDone(k);save();closeModal();rr()}
 
 /* ödev ekle / düzenle */
-function mAdd(due){openModal('<h2>Ödev ekle</h2><div class="row"><select id="mD" style="flex:1">'+opts(SUBJ,"","Ders seç")+'</select><input type="number" id="mN" min="1" placeholder="Kaç soru" style="width:110px"></div><input type="text" id="mT" placeholder="Ödev adı (boş bırakırsan ders adı yazılır)" style="width:100%;margin-bottom:8px"><div class="row"><input type="date" id="mDue" value="'+(due||TM)+'"></div><div class="row"><button data-m="addTask">Ekle</button><button class="ghost" data-m="photo">Fotoğraftan ekle</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+function mAdd(due){openModal('<h2>Ödev ekle</h2><div class="row"><select id="mD" style="flex:1">'+opts(SUBJ.concat(BRANS),"","Ders seç")+'</select><input type="number" id="mN" min="1" placeholder="Kaç soru" style="width:110px"></div><input type="text" id="mT" placeholder="Ödev adı (boş bırakırsan ders adı yazılır)" style="width:100%;margin-bottom:8px"><div class="row"><input type="date" id="mDue" value="'+(due||TM)+'"></div><div class="row"><button data-m="addTask">Ekle</button><button class="ghost" data-m="photo">Fotoğraftan ekle</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
 function addTaskV2(){var ders=$("mD").value,n=parseInt($("mN").value,10)||0,ti=$("mT").value.trim();
  if(!ders&&!ti){alert("Ders seç ya da ödev adı yaz.");return}
  if(!ti)ti=ders+" ödevi";
  var t={id:Date.now(),title:ti,subj:ders,due:$("mDue").value||TM,done:false};if(n>0)t.n=n;S.tasks.push(t);save();closeModal();rr()}
 function mEditT(id){var t=S.tasks.filter(function(x){return String(x.id)===id})[0];if(!t)return;
- openModal('<h2>Ödevi düzenle</h2><input type="text" id="eT" value="'+esc(t.title)+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="eD" style="flex:1">'+opts(SUBJ,t.subj,"Ders yok")+'</select><input type="number" id="eN" min="1" placeholder="Soru" value="'+(t.n||"")+'" style="width:100px"></div><div class="row"><input type="date" id="eDue" value="'+t.due+'"></div><div class="row"><button data-m="saveT" data-id="'+id+'">Kaydet</button><button class="ghost" data-m="delT" data-id="'+id+'">Sil</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+ openModal('<h2>Ödevi düzenle</h2><input type="text" id="eT" value="'+esc(t.title)+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="eD" style="flex:1">'+opts(SUBJ.concat(BRANS),t.subj,"Ders yok")+'</select><input type="number" id="eN" min="1" placeholder="Soru" value="'+(t.n||"")+'" style="width:100px"></div><div class="row"><input type="date" id="eDue" value="'+t.due+'"></div><div class="row"><button data-m="saveT" data-id="'+id+'">Kaydet</button><button class="ghost" data-m="delT" data-id="'+id+'">Sil</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
 function mEditR(id){var r=S.rutin.filter(function(x){return String(x.id)===id})[0];if(!r)return;
  openModal('<h2>Rutini düzenle</h2><input type="text" id="eT" value="'+esc(r.title)+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="eD" style="flex:1">'+opts(SUBJ,r.ders)+'</select><input type="number" id="eN" min="1" value="'+r.n+'" style="width:100px"></div><div class="row">'+dayChips(r.days)+'</div><div class="row"><button data-m="saveR" data-id="'+id+'">Kaydet</button><button class="ghost" data-m="delR2" data-id="'+id+'">Sil</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
-function mShort(i){var s=SHORT[i];openModal('<h2>'+esc(s[0])+' ekle</h2><input type="text" id="sT" value="'+esc(s[0])+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="sD" style="flex:1">'+opts(SUBJ,s[1])+'</select><input type="number" id="sN" min="1" value="20" style="width:100px"><span style="color:var(--mut)">soru</span></div><div class="row">'+dayChips([1,2,3,4,5,6,0])+'</div><label class="pm"><input type="checkbox" id="sRep" checked> Her hafta tekrar et (rutin)</label><div class="empty" style="padding:0 0 8px">İşaretlemezsen sadece bu haftanın seçili günlerine eklenir.</div><div class="row"><button data-m="addShort">Ekle</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+function mShort(i){var s=SHORT[i]||["","Matematik"];openModal('<h2>'+(s[0]?esc(s[0])+' ekle':'Kendin oluştur')+'</h2><input type="text" id="sT" placeholder="Ad" value="'+esc(s[0])+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="sD" style="flex:1">'+opts(SUBJ.concat(BRANS),s[1])+'</select><input type="number" id="sN" min="1" value="20" style="width:100px"><span style="color:var(--mut)">soru</span></div><div class="row">'+dayChips([1,2,3,4,5,6,0])+'</div><label class="pm"><input type="checkbox" id="sRep" checked> Her hafta tekrar et (rutin)</label><div class="empty" style="padding:0 0 8px">İşaretlemezsen sadece bu haftanın seçili günlerine eklenir.</div><div class="row"><button data-m="addShort">Ekle</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
 $("mdl").addEventListener("click",function(e){var b=e.target.closest("[data-m]");if(!b)return;var m=b.getAttribute("data-m"),id=b.getAttribute("data-id"),k=b.getAttribute("data-k");
  if(m==="photo"){closeModal();go("ders");navSync("ders")}
  else if(m==="saveRes")saveRes(k);
@@ -1067,11 +1079,12 @@ function prow(t){var k="t"+t.id;return'<div class="task'+(t.done?" done":"")+'">
 function prowR(r,d){var k=r.id+"|"+d;return'<div class="task'+(S.rdone[k]?" done":"")+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">Süre</button><button class="ghost sm" data-act="edr:'+r.id+'">Düzenle</button></div>'}
 function renderProg2(){var wd=wkDays(0),old=[];
  Object.keys(S.program||{}).forEach(function(g){(S.program[g]||[]).forEach(function(x){if(!x.tid)old.push({g:g,x:x})})});
- var h='<div class="card"><h2>Kısa yollar</h2><div class="row">'+SHORT.map(function(s,i){return'<button class="ghost sm" data-act="sc:'+i+'">'+esc(s[0])+'</button>'}).join("")+'</div><div class="empty" style="padding:0">Birine bas: günleri, soru sayısını ve adı seç. İstersen her haftaya rutin olarak eklenir.</div></div>'+
+ var h='<div class="card"><h2>Kısa yollar</h2><div class="row">'+SHORT.map(function(s,i){return'<button class="ghost sm" data-act="sc:'+i+'">'+esc(s[0])+'</button>'}).join("")+'<button class="sm" data-act="sc:-1">+ Kendin oluştur</button></div><div class="empty" style="padding:0">Birine bas: günleri, soru sayısını ve adı seç. İstersen her haftaya rutin olarak eklenir.</div></div>'+
  '<div class="card" style="margin-top:12px"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Bu haftanın planı</h2><button class="sm" data-act="add">+ Ödev</button></div>';
  wd.forEach(function(d,i){var ts=S.tasks.filter(function(t){return t.due===d}),rs=S.rutin.filter(function(r){return rutDay(r,d)});
   h+='<div class="row" style="justify-content:space-between;margin:14px 0 6px"><div class="grp'+(d===T?" today":"")+'" style="margin:0">'+DN[i]+' '+fd(d)+'</div><button class="ghost sm" data-act="pdd:'+d+'">+</button></div>';
   h+=(ts.length||rs.length)?ts.map(prow).join("")+rs.map(function(r){return prowR(r,d)}).join(""):'<div class="empty">—</div>'});
+ var fut2=S.tasks.filter(function(t){return t.due>wd[6]}).sort(function(a,b){return a.due>b.due?1:-1});if(fut2.length)h+='<h3>Sonraki günler</h3>'+futHtml(fut2,prow);
  h+='</div><div class="card" style="margin-top:12px"><h2>Rutinlerim</h2>'+(S.rutin.length?S.rutin.map(function(r){return'<div class="task"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small>'+esc(r.ders)+' · '+(r.days.length===7?"her gün":DAYS.filter(function(d){return r.days.indexOf(d[1])>=0}).map(function(d){return d[0]}).join(" "))+'</small></div><button class="ghost sm" data-act="edr:'+r.id+'">Düzenle</button></div>'}).join(""):'<div class="empty">Henüz rutin yok. Yukarıdan bir kısa yola bas.</div>')+'</div>';
  if(old.length)h+='<details class="card" style="margin-top:12px"><summary><b>Eski program kayıtları</b> <span style="color:var(--mut)">('+old.length+')</span></summary><div style="margin-top:8px">'+old.map(function(o){return'<div class="task"><div class="t"><b>'+GUN[o.g]+'</b> '+esc(o.x.time||"")+' <span class="tag">'+esc(o.x.subj)+'</span>'+esc(o.x.note)+'</div><button class="x" data-act="opd:'+o.g+':'+o.x.id+'">✕</button></div>'}).join("")+'</div></details>';
  $("prog2").innerHTML=h}
@@ -1093,6 +1106,70 @@ $("dsPrev").onclick=function(e){if(e.target.id!=="dsAdd")return;var n=0;
   var due=/^\d{4}-\d{2}-\d{2}$/.test(o.teslim)?o.teslim:TM,sq=parseInt(o.soru,10),t={id:Date.now()+n,title:String(o.baslik).slice(0,200),subj:SUBJ.indexOf(o.ders)>=0?o.ders:"",due:due,done:false};
   if(sq>0&&sq<=500)t.n=sq;S.tasks.push(t);n++});
  S.lastDs=T;dsItems=[];$("dsPrev").innerHTML="";save();renderPlan();$("dsMsg").textContent=n+" ödev listeye eklendi."};
+
+/* ===== v9: yapay zekâ paneli, soru gir, sayaç kalıcı, hız ===== */
+var BRANS=["Fen Branş Denemesi","Matematik Branş Denemesi"];
+function todayFirst(a){var t=a.indexOf(T);return t<0?a:[a[t]].concat(a.filter(function(x){return x!==T}))}
+function futHtml(fut,rowf){var out="",last="";fut.forEach(function(t){if(t.due!==last){last=t.due;out+='<div class="grp">'+DN[(new Date(t.due+"T12:00:00").getDay()+6)%7]+' '+fd(t.due)+'</div>'}out+=rowf(t)});return out}
+function mdx(t){return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}
+var _en3=ensure;ensure=function(){_en3();S.ai=S.ai||[]};ensure();
+TABS.push("yz");
+document.body.setAttribute("data-tab","plan");
+$("tabs").addEventListener("click",function(e){var b=e.target.closest("button");if(b)document.body.setAttribute("data-tab",b.getAttribute("data-t"))});
+
+/* sayaç yenilemede sıfırlanmasın */
+function tmPersist(){try{localStorage.setItem("yks-timer",JSON.stringify({el:T2.el,run:T2.run,t0:T2.t0,subj:T2.subj}))}catch(e){}}
+try{var tp=JSON.parse(localStorage.getItem("yks-timer")||"null");if(tp&&typeof tp.el==="number"){T2.el=tp.el;T2.run=!!tp.run;T2.t0=tp.t0||Date.now();if(tp.subj)T2.subj=tp.subj}}catch(e){}
+var _tt=tmToggle,_ts=tmSave,_tr=tmReset;
+tmToggle=function(){_tt();tmPersist()};tmSave=function(){_ts();tmPersist()};tmReset=function(){_tr();tmPersist()};
+$("home2").addEventListener("change",function(e){if(e.target.id==="tmSubj")tmPersist()});
+setInterval(function(){var n=$("fsNow");if(n)n.textContent=new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})},1000);
+
+/* giriş formu (parola kaydetme önerisi için) */
+$("aForm").addEventListener("submit",function(e){e.preventDefault();authGo()});
+
+/* sıralama: önbellek + arka planda hazırlık */
+function bdKey(p){return"yks-bd-"+p}
+async function loadBoard(){BD.err="";var c=null;try{c=JSON.parse(localStorage.getItem(bdKey(BD.p))||"null")}catch(e){}
+ BD.u=c?c.u:null;renderBoard();var r0=prange(BD.p);
+ try{var r=await api("board",{from:r0.from,to:r0.to});
+  if(r.ok){BD.u=r.users;try{localStorage.setItem(bdKey(BD.p),JSON.stringify({u:r.users}))}catch(e){}}
+  else if(!c)BD.err=r.error==="Bilinmeyen işlem"?"Sıralama için Apps Script kodunu güncelleyip yeniden dağıtman gerekiyor.":(r.error||"Yüklenemedi.")}
+ catch(e){if(!c)BD.err="Sunucuya ulaşılamadı."}
+ renderBoard()}
+async function loadBoardQuiet(){var r0=prange("week");try{var r=await api("board",{from:r0.from,to:r0.to});if(r.ok)localStorage.setItem(bdKey("week"),JSON.stringify({u:r.users}))}catch(e){}}
+
+/* yapay zekâ: alt pencere + kalıcı geçmiş */
+function aiSave(kind,q,a){S.ai.unshift({id:Date.now(),t:Date.now(),kind:kind,q:String(q).slice(0,500),a:String(a).slice(0,8000)});S.ai=S.ai.slice(0,60);save()}
+async function aiRun(kind,prompt,shown,opts){
+ openModal('<h2>'+esc(kind)+'</h2><div class="ai" id="aiSheet"><span class="spn"></span> Düşünüyor…</div><div class="row" style="margin-top:10px"><button class="ghost" data-m="close">Kapat</button><button class="ghost" data-m="aiHist">Geçmiş</button></div>');
+ if(!sample){$("aiSheet").textContent="Yapay zekâ bu sürümde kullanılamıyor.";return}
+ try{var out="";await sample(prompt,Object.assign({cache:false,onText:function(r){out=r.text}},opts||{}));
+  var el=$("aiSheet");if(el)el.innerHTML=mdx(out||"Yanıt boş geldi.");if(out)aiSave(kind,shown||kind,out)}
+ catch(e){var e2=$("aiSheet");if(e2)e2.textContent=(e&&e.message)||"Yanıt alınamadı. Biraz sonra tekrar dene."}}
+$("aiBtn").onclick=function(){var l=pick();if(!l.length){alert("Önce deneme ekle.");return}
+ var wk=[];for(var k=6;k>=0;k--)wk.push({gun:addDays(-k),dk:Math.round(minsOn(addDays(-k)))});
+ var data={tur:$("aType").value,denemeler:l.map(function(x){return{ad:x.name,tarih:x.date,net:totNet(x),dersler:x.sc}}),dersOrtalamalari:stats(l),sonHaftaCalismaDk:wk};
+ aiRun("Deneme analizi","Sen deneyimli bir YKS koçusun. Türkçe, samimi ve kısa yaz (en fazla 250 kelime). Aşağıdaki deneme verilerini analiz et: 1) genel trend, 2) en zayıf 2-3 ders ve neden (yanlış sayısı/doğruluk), 3) bu hafta için somut 4-5 maddelik çalışma planı. Net = doğru - yanlış/4.\nVeri:\n"+JSON.stringify(data),"Deneme analizi ("+$("aType").value+")")};
+function ozAi(){aiRun("Özet yorumu","Sen deneyimli bir YKS koçusun. Türkçe, samimi ve kısa (en fazla 180 kelime) yaz. Aşağıdaki özeti yorumla: iyi giden bir şey, eksik kalanlar, bir sonraki dönem için 3 somut öneri.\n"+JSON.stringify(ozData),"Özet yorumu ("+ozData.donem+")")}
+async function yzAsk(){var t=$("yzQ").value.trim(),f=$("yzImg").files[0];if(!t&&!f)return;var o={};
+ if(f){if(!(await imgOK())){alert("Bu görünümde görsel gönderilemiyor.");return}o.images=[await shrink(f)]}
+ var q=t||"Görseldeki soruyu çöz ve açıkla.";$("yzQ").value="";$("yzImg").value="";
+ await aiRun("Soru","Sen sabırlı bir YKS öğretmenisin. Türkçe, kısa ve adım adım açıkla; sonunda tek cümlelik bir püf noktası ver.\n\n"+q,q+(f?" (görsel)":""),o);renderYz()}
+$("yzGo").onclick=yzAsk;
+function renderYz(){var l=S.ai||[];$("yzList").innerHTML=l.length?'<div class="row" style="justify-content:space-between;margin-top:12px"><h3 style="margin:0">Geçmiş</h3><button class="ghost sm" data-act="aiclr">Tümünü sil</button></div>'+l.map(function(x){return'<details class="card" style="margin-top:10px"><summary><b>'+esc(x.kind)+'</b> <span style="color:var(--mut)">· '+new Date(x.t).toLocaleString("tr-TR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+'</span><div style="color:var(--mut);font-size:.85rem">'+esc(x.q).slice(0,90)+'</div></summary><div class="ai" style="margin-top:8px">'+mdx(x.a)+'</div><div class="row" style="margin-top:8px"><button class="ghost sm" data-act="aidel:'+x.id+'">Sil</button></div></details>'}).join(""):'<div class="empty" style="margin-top:12px">Henüz kayıt yok. Bir şey sor ya da Analiz sekmesinden deneme analizi yap.</div>'}
+
+/* soru gir */
+function mSoru(){var wd=wkDays(0);openModal('<h2>Soru gir</h2><div class="row"><select id="sgDay" style="flex:1">'+wd.map(function(d,i){return'<option value="'+d+'"'+(d===T?" selected":"")+'>'+DN[i]+' '+fd(d)+'</option>'}).join("")+'</select></div><div id="sgRows"></div><div class="row"><button data-m="saveSG">Kaydet</button><button class="ghost" data-m="close">Vazgeç</button></div>');sgFill()}
+function sgFill(){var d=$("sgDay").value,ex={};S.sorular.forEach(function(s){if(s.rk==="m|"+d+"|"+s.ders)ex[s.ders]=s});
+ $("sgRows").innerHTML='<div class="empty" style="padding:0 0 6px">Seçtiğin günün soru sayısını branş branş gir. Doğru sayısı isteğe bağlı.</div>'+SUBJ.concat(BRANS).map(function(k){var e=ex[k]||{};return'<div class="row"><span style="flex:1">'+esc(k)+'</span><input type="number" min="0" class="sgn" data-k="'+esc(k)+'" placeholder="Soru" value="'+(e.n||"")+'" style="width:80px"><input type="number" min="0" class="sgd" data-k="'+esc(k)+'" placeholder="Doğru" value="'+(e.d!=null?e.d:"")+'" style="width:80px"></div>'}).join("")}
+function saveSG(){var d=$("sgDay").value;S.sorular=S.sorular.filter(function(s){return!(s.rk&&s.rk.indexOf("m|"+d+"|")===0)});
+ [].slice.call(document.querySelectorAll(".sgn")).forEach(function(inp){var n=parseInt(inp.value,10);if(!(n>0))return;var k=inp.getAttribute("data-k"),dv=[].slice.call(document.querySelectorAll(".sgd")).filter(function(x){return x.getAttribute("data-k")===k})[0].value,dg=dv===""?null:parseInt(dv,10);if(dg!==null&&(dg<0||dg>n))dg=null;
+  S.sorular.push({id:Date.now()+Math.floor(Math.random()*1e6),date:d,ders:k,n:n,d:dg,rk:"m|"+d+"|"+k})});
+ save();closeModal();rr()}
+$("mdl").addEventListener("change",function(e){if(e.target.id==="sgDay")sgFill()});
+$("mdl").addEventListener("click",function(e){var b=e.target.closest("[data-m]");if(!b)return;var m=b.getAttribute("data-m");
+ if(m==="saveSG")saveSG();else if(m==="aiHist"){closeModal();go("yz");navSync("yz")}});
 
 buildForm();renderAll();
 boot();
