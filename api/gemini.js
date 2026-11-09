@@ -20,9 +20,13 @@ module.exports = async (req, res) => {
   if (!token) return res.status(401).json({ error: 'yetkisiz' });
   try {
     const who = await checkUser(token);
-    if (!who.ok) return res.status(who.limit ? 429 : 401).json({ error: who.error || 'yetkisiz' });
+    if (!who.ok) {
+      if (who.limit) return res.status(429).json({ error: who.error || 'limit' });
+      if (who.auth === false) return res.status(401).json({ error: who.error || 'yetkisiz' });
+      return res.status(502).json({ error: 'Apps Script güncel değil ya da hata verdi (' + (who.error || 'bilinmeyen') + '). Yeni kodu yapıştırıp yeni sürüm olarak dağıt.' });
+    }
   } catch (e) {
-    return res.status(502).json({ error: 'dogrulama hatasi' });
+    return res.status(502).json({ error: 'Apps Script yanıtı okunamadı. Dağıtımda Erişim Herkes olmalı ve APPS_SCRIPT_URL doğru olmalı.' });
   }
 
   const { messages, json } = req.body || {};
