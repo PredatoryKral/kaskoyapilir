@@ -162,6 +162,8 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
 .king{font-weight:800;letter-spacing:.22em;font-size:.8rem;color:var(--mut);margin:2px 0}
 @media print{body{background:#fff;color:#000}.top2,#nav2,#mdl,#fsT,#auth,.noprint{display:none!important}section:not(#ozet){display:none!important}#ozet{display:block!important}.card{box-shadow:none;border:1px solid #ddd;background:#fff!important;color:#000;break-inside:avoid}.task{background:#f4f4f4}.stat b{color:#000;-webkit-text-fill-color:#000}.bar{background:#ddd}.bar i{background:#333}}
 
+#nav2 button{font-size:.6rem}#nav2 span{white-space:nowrap}
+#prog>*:not(#prog2){display:none!important}
 </style>
 </head>
 <body>
@@ -196,8 +198,8 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
       <div class="card stat" id="yksCard" style="cursor:pointer" title="Tarihi değiştirmek için dokun"><b id="sYks">–</b><span>YKS’ye kalan (dokun: tarihi değiştir)</span></div>
     </div>
     <div id="todayProg"></div>
-    <div class="card" id="dsCard"><h2> Dershane ödevlerini yükle</h2>
-      <p style="margin:0 0 8px;color:var(--mut);font-size:.9rem">Dershane planlayıcının ekran görüntüsünü, fotoğrafını ya da PDF’ini yükle (birden fazla olabilir) ya da metni yapıştır. Gemini ödevleri ayıklayıp listeye ekler; eklemeden önce kontrol edersin.</p>
+    <div class="card" id="dsCard"><h2>Fotoğraftan ödev ekle</h2>
+      <p style="margin:0 0 8px;color:var(--mut);font-size:.9rem">Dershane sitesinin ekran görüntüsünü, defter fotoğrafını ya da PDF’i yükle (birden fazla olabilir) ya da metni yapıştır. Gemini ödevleri ayıklayıp listeye ekler; eklemeden önce kontrol edersin.</p>
       <div class="row"><input type="file" id="dsIn" accept="image/*,application/pdf,text/plain" multiple></div>
       <textarea id="dsTxt" rows="3" placeholder="Veya ödev metnini buraya yapıştır"></textarea>
       <div class="row"><button id="dsGo">Ödevleri ayıkla</button></div><div id="dsMsg" style="color:var(--mut);font-size:.88rem"></div><div id="dsPrev"></div>
@@ -258,6 +260,7 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
   </section>
   <section id="ders" class="hide"></section>
   <section id="prog" class="hide">
+    <div id="prog2"></div>
     <div class="card"><h2> Haftalık ders programı</h2>
       <div class="row"><select id="pDay"><option value="1">Pazartesi</option><option value="2">Salı</option><option value="3">Çarşamba</option><option value="4">Perşembe</option><option value="5">Cuma</option><option value="6">Cumartesi</option><option value="0">Pazar</option></select><input type="time" id="pTime"><select id="pSubj"></select><input type="text" id="pNote" placeholder="Ne çalışacaksın? (opsiyonel)"><button id="pAdd">Ekle</button></div></div>
     <div id="pList"></div>
@@ -282,7 +285,7 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
     <div class="card"><h2> Gemini’a sor</h2><div id="chat"></div><textarea id="qTxt" rows="3" placeholder="Takıldığın soruyu ya da konuyu yaz…"></textarea><div class="row"><input type="file" id="qImg" accept="image/*"><button id="qGo">Sor</button><button class="ghost" id="qClr">Temizle</button></div></div>
   </section>
   <section id="yedek" class="hide">
-    <div class="card"><h2> Gemini erişim şifresi</h2>
+    <div class="card" style="display:none"><h2>Gemini erişim şifresi</h2>
       <p style="margin:0 0 8px;color:var(--mut);font-size:.9rem">Vercel’de APP_PASSWORD olarak belirlediğin şifreyi gir. Dershane ödevi okuma, yorumlar ve Soru sor bu şifreyle çalışır.</p>
       <div class="row"><input type="password" id="aiPw" placeholder="Gemini erişim şifresi" style="flex:1 1 220px" autocomplete="off"></div>
     </div>
@@ -308,8 +311,8 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
   var imgs=((opts&&opts.images)||[]).slice(0,4);
   if(imgs.length){var parts=[];for(var i=0;i<imgs.length;i++){var bl=await shrink(imgs[i]);parts.push({type:"image",source:{type:"base64",media_type:bl.type||"image/jpeg",data:await b64(bl)}})}
    var last=msgs[msgs.length-1];parts.push({type:"text",text:String(last.content)});last.content=parts}
-  var r=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json","x-app-password":pw()},body:JSON.stringify({messages:msgs,json:!!wantJson})});
-  if(r.status===401){alert("Gemini erişim şifresi girilmemiş ya da yanlış. Yedek sekmesinden gir.");throw new Error("unauthorized")}
+  var r=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json","x-token":getToken()},body:JSON.stringify({messages:msgs,json:!!wantJson})});
+  if(r.status===401){alert("Oturum yok ya da süresi doldu. Tekrar giriş yap.");throw new Error("unauthorized")}if(r.status===429){alert("Bugünkü yapay zekâ kullanım limitin doldu. Yarın tekrar dene.");throw new Error("limit")}
   if(!r.ok)throw new Error("api "+r.status);
   var d=await r.json(),text=d.text||"";
   if(opts&&opts.onText)opts.onText({text:text});
@@ -577,7 +580,7 @@ $("dsGo").onclick=async function(){
  var opts={cache:false},lim=null;try{lim=await sample.limits()}catch(e){}
  if(dsImgs.length){if(lim&&lim.images)opts.images=dsImgs.slice(0,(lim.images.max||4));else if(!txt){$("dsMsg").textContent="Bu görünümde görsel gönderilemiyor. Ödev metnini yapıştırmayı dene.";return}}
  $("dsMsg").textContent="Gemini ödevleri okuyor…";$("dsGo").disabled=true;
- var pr="Bir dershanenin ödev listesinden (metin ve/veya görsel) ödevleri çıkar. Bugün "+T+" ("+GUN[new Date().getDay()]+"). Her ödev için: baslik (kısa; ne yapılacağı, sayfa/soru bilgisiyle), ders (şunlardan en uygun biri ya da boş bırak: "+SUBJ.join(", ")+"), teslim (YYYY-MM-DD; belirtilmemişse yarın: "+TM+"; gün adı verilmişse bugünden sonraki ilk o gün). Ödev olmayan bilgileri alma. SADECE JSON döndür: {\"odevler\":[{\"baslik\":\"\",\"ders\":\"\",\"teslim\":\"\"}]}"+(txt?"\n\nMETİN:\n"+txt.slice(0,9000):"");
+ var pr="Bir ödev listesinden, dershane sitesi ekran görüntüsünden ya da defter fotoğrafından (metin ve/veya görsel) ödevleri çıkar. Her ödevde soru sayısı yazıyorsa soru alanına yaz, yoksa 0. Bugün "+T+" ("+GUN[new Date().getDay()]+"). Her ödev için: baslik (kısa; ne yapılacağı, sayfa/soru bilgisiyle), ders (şunlardan en uygun biri ya da boş bırak: "+SUBJ.join(", ")+"), teslim (YYYY-MM-DD; belirtilmemişse yarın: "+TM+"; gün adı verilmişse bugünden sonraki ilk o gün). Ödev olmayan bilgileri alma. SADECE JSON döndür: {\"odevler\":[{\"baslik\":\"\",\"ders\":\"\",\"teslim\":\"\",\"soru\":0}]}"+(txt?"\n\nMETİN:\n"+txt.slice(0,9000):"");
  try{var r=await sample.json(pr,opts);dsItems=(r.odevler||[]).filter(function(o){return o&&o.baslik});renderPrev();$("dsMsg").textContent=dsItems.length?dsItems.length+" ödev bulundu. Kontrol et, istemediklerin varsa işareti kaldır.":"Ödev bulunamadı. Daha net bir görsel ya da metin dene."}
  catch(e){$("dsMsg").textContent="Ödevler okunamadı. Tekrar dene ya da elle ekle."}
  $("dsGo").disabled=false};
@@ -825,7 +828,7 @@ $("aiPw").oninput=function(){try{localStorage.setItem("yks-ai-pw",$("aiPw").valu
 var IC={list:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',bars:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',dots:'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',full:'<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>',cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',clip:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',up:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',repeat:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',chev:'<polyline points="9 18 15 12 9 6"/>',moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'};
 function ic(n,s){s=s||20;return'<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle">'+IC[n]+'</svg>'}
 function setThemeIcon(){var c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");if(typeof IC!=="undefined")$("themeBtn").innerHTML=ic(c==="dark"?"sun":"moon",20);return c}
-var _en2=ensure;ensure=function(){_en2();S.rutin=S.rutin||[];S.rdone=S.rdone||{};S.sorular=S.sorular||[];S.sayac=S.sayac||{a:0,b:0}};
+var _en2=ensure;ensure=function(){_en2();S.rutin=S.rutin||[];S.rdone=S.rdone||{};S.sorular=S.sorular||[];S.sayac=S.sayac||{a:0,b:0};S.res=S.res||{}};
 ensure();
 TABS.push("sira","ozet","admin");
 
@@ -847,14 +850,14 @@ function mQ(ders,title,rk,n){openModal('<h2>'+esc(title)+'</h2><div class="row">
 function mRut(){var days=[["Pt",1],["Sa",2],["Ça",3],["Pe",4],["Cu",5],["Ct",6],["Pz",0]];
  openModal('<h2>Rutinler</h2>'+(S.rutin.length?S.rutin.map(function(r){return'<div class="task"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small>'+esc(r.ders)+' · '+(r.days.length===7?"her gün":days.filter(function(d){return r.days.indexOf(d[1])>=0}).map(function(d){return d[0]}).join(" "))+'</small></div><button class="x" data-m="delR" data-id="'+r.id+'">✕</button></div>'}).join(""):'<div class="empty">Henüz rutin yok.</div>')+
  '<h3>Yeni rutin</h3><input type="text" id="rT" value="Paragraf" style="width:100%;margin-bottom:8px"><div class="row"><select id="rD">'+opts(SUBJ,"Türkçe")+'</select><input type="number" id="rN" min="1" value="20" style="width:90px"><span style="color:var(--mut)">soru</span></div><div class="row">'+days.map(function(d){return'<label class="pill"><input type="checkbox" class="rd" value="'+d[1]+'" checked> '+d[0]+'</label>'}).join("")+'</div><div class="row"><button data-m="addR">Rutin ekle</button><button class="ghost" data-m="close">Kapat</button></div>')}
-function mMore(){var it=[["prog","cal","Program"],["deneme","clip","Denemeler"],["konu","book","Konular"],["ders","up","Dershane ödevleri"],["soru","chat","Soru sor"],["yedek","user","Hesap ve yedek"],["admin","user","Yönetici paneli"]];
+function mMore(){var it=[["konu","book","Konular"],["ders","up","Fotoğraftan ödev ekle"],["soru","chat","Soru sor"],["yedek","user","Hesap ve yedek"],["admin","user","Yönetici paneli"]];
  openModal('<h2>Daha fazla</h2>'+it.map(function(x){return'<button class="mi" data-m="goto" data-t="'+x[0]+'">'+ic(x[1],22)+'<span>'+x[2]+'</span>'+ic("chev",18)+'</button>'}).join("")+'<button class="mi" data-m="rutin">'+ic("repeat",22)+'<span>Rutinler</span>'+ic("chev",18)+'</button>')}
 $("mdl").addEventListener("click",function(e){if(e.target.id==="mdl"){closeModal();return}
  var b=e.target.closest("[data-m]");if(!b)return;var m=b.getAttribute("data-m");
  if(m==="close")closeModal();
  else if(m==="rutin")mRut();
  else if(m==="goto"){var t=b.getAttribute("data-t");closeModal();go(t);navSync(t)}
- else if(m==="addTask"){var ti=$("mT").value.trim();if(!ti){$("mT").focus();return}S.tasks.push({id:Date.now(),title:ti,subj:$("mD").value,due:$("mDue").value||TM,done:false});save();closeModal();renderHome()}
+ else if(m==="addTask"){addTaskV2()}
  else if(m==="saveQ"){var n=parseInt($("qN").value,10),dv=$("qDg").value===""?null:parseInt($("qDg").value,10),rk=b.getAttribute("data-rk");
   if(!(n>0)||(dv!==null&&(dv<0||dv>n))){alert("Soru sayısı en az 1 olmalı, doğru sayısı soru sayısını geçemez.");return}
   S.sorular.push({id:Date.now(),date:T,ders:$("qD").value,n:n,d:dv,rk:rk||undefined});if(rk)S.rdone[rk]=1;save();closeModal();renderHome()}
@@ -864,12 +867,12 @@ $("mdl").addEventListener("click",function(e){if(e.target.id==="mdl"){closeModal
  else if(m==="delR"){var id=b.getAttribute("data-id");S.rutin=S.rutin.filter(function(r){return String(r.id)!==id});save();mRut();renderHome()}});
 
 /* alt menü */
-var NAVI=[["plan","list","Ödevler"],["analiz","bars","Analiz"],["sira","trophy","Sıralama"],["ozet","doc","Özet"],["more","dots","Daha fazla"]];
+var NAVI=[["plan","list","Ödevler"],["prog","cal","Program"],["deneme","clip","Denemeler"],["analiz","bars","Analiz"],["sira","trophy","Sıralama"],["ozet","doc","Özet"],["more","dots","Daha fazla"]];
 $("nav2").innerHTML=NAVI.map(function(n){return'<button data-go="'+n[0]+'">'+ic(n[1],24)+'<span>'+n[2]+'</span></button>'}).join("");
-function navSync(t){Array.prototype.forEach.call($("nav2").children,function(b){var g=b.getAttribute("data-go");b.classList.toggle("on",g===t||(g==="more"&&["plan","analiz","sira","ozet"].indexOf(t)<0))})}
+function navSync(t){Array.prototype.forEach.call($("nav2").children,function(b){var g=b.getAttribute("data-go");b.classList.toggle("on",g===t||(g==="more"&&["plan","prog","deneme","analiz","sira","ozet"].indexOf(t)<0))})}
 $("nav2").addEventListener("click",function(e){var b=e.target.closest("[data-go]");if(!b)return;var t=b.getAttribute("data-go");if(t==="more"){mMore();return}go(t);navSync(t)});
 navSync("plan");
-$("tabs").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var t=b.getAttribute("data-t");if(t==="ozet")renderOzet();if(t==="sira")loadBoard();if(t==="plan")renderHome();if(t==="admin")renderAdmin()});
+$("tabs").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var t=b.getAttribute("data-t");if(t==="ozet")renderOzet();if(t==="sira")loadBoard();if(t==="plan")renderHome();if(t==="admin")renderAdmin();if(t==="prog")renderProg2()});
 
 /* sayaç */
 var T2={el:0,run:false,t0:0,subj:"Genel çalışma"},wl2=null;
@@ -889,8 +892,8 @@ function trow2(t){return'<div class="task'+(t.done?" done":"")+'"><input type="c
 function rrow(r,d){var k=r.id+"|"+d,dn=!!S.rdone[k];return'<div class="task'+(dn?" done":"")+'"><input type="checkbox" '+(dn?"checked":"")+' data-rk="'+k+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+'</small></div></div>'}
 function renderHome(){
  var wd=wkDays(0),late=S.tasks.filter(function(t){return!t.done&&t.due<wd[0]}),h='';
- h+='<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Bu haftanın ödevleri</h2><div class="row" style="margin:0"><button class="ghost sm" data-act="rut">Rutin</button><button class="sm" data-act="add">'+ic("plus",15)+' Ödev</button></div></div>'+
-  '<div class="row"><button class="ghost sm" data-act="q:Paragraf:Türkçe">Paragraf</button><button class="ghost sm" data-act="q:Problemler:Matematik">Problemler</button></div>';
+ h+='<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Bu haftanın ödevleri</h2><div class="row" style="margin:0"><button class="sm" data-act="add">'+ic("plus",15)+' Ödev</button></div></div>'+
+  '';
  if(late.length)h+='<div class="grp bad">Geçen haftalardan kalan ('+late.length+')</div>'+late.map(trow2).join("");
  wd.forEach(function(d,i){var ts=S.tasks.filter(function(t){return t.due===d}),rs=S.rutin.filter(function(r){return rutDay(r,d)}),tdy=d===T;
   h+='<div class="grp'+(tdy?" today":"")+'">'+DN[i]+' '+fd(d)+(tdy?' · bugün':'')+'</div>';
@@ -905,16 +908,16 @@ function renderHome(){
 var _rp2=renderPlan;renderPlan=function(){_rp2();renderHome()};
 $("home2").addEventListener("click",function(e){var t=e.target,c=t.getAttribute("data-c"),d=t.getAttribute("data-d"),rk=t.getAttribute("data-rk");
  if(c){S.tasks.forEach(function(x){if(String(x.id)===c)x.done=t.checked});save();renderHome()}
- if(d){S.tasks=S.tasks.filter(function(x){return String(x.id)!==d});save();renderHome()}
- if(rk){e.preventDefault();if(S.rdone[rk]){delete S.rdone[rk];S.sorular=S.sorular.filter(function(s){return s.rk!==rk});save();renderHome()}
-  else{var r=S.rutin.filter(function(x){return String(x.id)===rk.split("|")[0]})[0];if(r)mQ(r.ders,r.title,rk,r.n)}}});
+ if(d){clearRes("t"+d);S.tasks=S.tasks.filter(function(x){return String(x.id)!==d});save();renderHome()}
+ if(rk){e.preventDefault();if(S.rdone[rk]){delete S.rdone[rk];clearRes(rk);save();renderHome()}
+  else{var r=S.rutin.filter(function(x){return String(x.id)===rk.split("|")[0]})[0];if(r)mResK(rk)}}});
 $("home2").addEventListener("change",function(e){if(e.target.id==="tmSubj")T2.subj=e.target.value});
 document.addEventListener("click",function(e){var el=e.target.closest("[data-act]");if(!el)return;var a=el.getAttribute("data-act").split(":");
  switch(a[0]){case"add":mAdd();break;case"rut":mRut();break;case"q":mQ(a[2],a[1]);break;
   case"cnt":S.sayac[a[1]]++;save();renderHome();break;case"cmin":S.sayac[a[1]]=Math.max(0,S.sayac[a[1]]-1);save();renderHome();break;
   case"tmT":tmToggle();break;case"tmS":tmSave();break;case"tmR":tmReset();break;case"tmF":fsOpen();break;case"tmX":fsClose();break;
   case"per":OZ.p=a[1];renderOzet();break;case"pdf":window.print();break;case"ozAi":ozAi();break;
-  case"bc":BD.c=a[1];renderBoard();break;case"bp":BD.p=a[1];loadBoard();break;case"hp":HP=a[1];renderHome();break;case"ap":AD.p=a[1];loadAdmin();break;case"admGo":AD.pw=$("admPw").value;loadAdmin();break}});
+  case"bc":BD.c=a[1];renderBoard();break;case"bp":BD.p=a[1];loadBoard();break;case"hp":HP=a[1];renderHome();break;case"ap":AD.p=a[1];loadAdmin();break;case"admGo":AD.pw=$("admPw").value;loadAdmin();break;case"res":mResK(a[1]);break;case"edt":mEditT(a[1]);break;case"edr":mEditR(a[1]);break;case"sc":mShort(parseInt(a[1],10));break;case"pdd":mAdd(a[1]);break;case"adm":admAct(a[1],a[2]);break;case"admNew":admNew();break;case"opd":S.program[a[1]]=(S.program[a[1]]||[]).filter(function(x){return String(x.id)!==a[2]});save();renderProg2();break}});
 
 /* özet */
 var OZ={p:"week"},ozData=null;
@@ -931,7 +934,7 @@ function renderOzet(){
  ozData={donem:nm[OZ.p],calismaDk:Math.round(tot),dersDk:ks.map(function(k){return{ders:k,dk:Math.round(by[k])}}),cozulen:qn,dogru:kd,yanlis:kq-kd,biten:td,yapilmayanOdev:topen.map(function(t){return t.title}),yapilmayanRutin:ro,denemeler:dn.map(function(x){return{ad:x.name,tur:x.type,net:totNet(x)}})};
  var chips=Object.keys(nm).map(function(k){return'<button class="'+(OZ.p===k?"":"ghost ")+'sm" data-act="per:'+k+'">'+nm[k]+'</button>'}).join("");
  var h='<div class="row noprint">'+chips+'</div><div class="card"><h2>Özet · '+nm[OZ.p]+prlabel(rg)+'</h2>'+
- '<div class="grid stats"><div class="card stat"><b>'+fmtMin(tot)+'</b><span>Çalışma süresi</span></div><div class="card stat"><b>'+qn+'</b><span>Çözülen soru</span></div><div class="card stat"><b>'+kd+' / '+(kq-kd)+'</b><span>Doğru / yanlış</span></div><div class="card stat"><b>'+td+'/'+tk.length+'</b><span>Biten ödev</span></div></div>'+
+ '<div class="grid stats"><div class="card stat"><b>'+fmtMin(tot)+'</b><span>Çalışma süresi</span></div><div class="card stat"><b>'+qn+'</b><span>Çözülen soru</span></div><div class="card stat"><b>'+kd+' / '+(kq-kd)+' / '+sum(qs,function(s){return s.b||0})+'</b><span>Doğru / yanlış / boş</span></div><div class="card stat"><b>'+td+'/'+tk.length+'</b><span>Biten ödev</span></div></div>'+
  '<h3>Derse göre çalışma süresi</h3>'+(ks.length?ks.map(function(k){return'<div class="bl"><span>'+esc(k)+'</span><div class="bar"><i style="width:'+by[k]/mx*100+'%"></i></div><span>'+fmtMin(by[k])+'</span></div>'}).join(""):'<div class="empty">Kayıt yok.</div>')+
  '<h3>Derse göre çözülen soru</h3>'+(Object.keys(qb).length?Object.keys(qb).map(function(k){return'<div class="bl"><span>'+esc(k)+'</span><div class="bar"><i style="width:'+qb[k]/Math.max.apply(null,Object.keys(qb).map(function(x){return qb[x]}))*100+'%"></i></div><span>'+qb[k]+' soru</span></div>'}).join(""):'<div class="empty">Kayıt yok. Ana ekrandan Paragraf ya da Problemler ile soru ekleyebilirsin.</div>')+
  '<h3>Yapılmayan ödevler</h3>'+((topen.length||ro.length)?topen.map(function(t){return'<div class="task"><div class="t">'+esc(t.title)+'<small> · '+fd(t.due)+'</small></div></div>'}).join("")+ro.map(function(r){return'<div class="task"><div class="t">'+esc(r)+'<small> · rutin</small></div></div>'}).join(""):'<div class="empty">Yok.</div>')+
@@ -983,7 +986,7 @@ function renderBoard(){var el=$("siraOut"),btn=function(on,a,t){return'<button c
 var AD={p:"week",pw:"",u:null,err:""};
 function renderAdmin(){var el=$("admOut");
  if(!AD.pw){el.innerHTML='<div class="row"><input type="password" id="admPw" placeholder="Yönetici şifresi" style="flex:1 1 200px" autocomplete="off"><button data-act="admGo">Aç</button></div>'+(AD.err?'<div class="empty">'+esc(AD.err)+'</div>':"");return}
- var h='<div class="row">'+pch("ap",AD.p,["week","last","w5","m1","all"])+'</div>';
+ var h='<div class="row">'+pch("ap",AD.p,["week","last","w5","m1","all"])+'<button class="sm" data-act="admNew">Yeni hesap</button></div>';
  if(AD.err)h+='<div class="empty">'+esc(AD.err)+'</div>';
  else if(!AD.u)h+='<div class="empty">Yükleniyor…</div>';
  else h+=AD.u.map(admUser).join("")||'<div class="empty">Kullanıcı yok.</div>';
@@ -994,17 +997,102 @@ async function loadAdmin(){AD.u=null;AD.err="";renderAdmin();var r0=prange(AD.p)
  catch(e){AD.err="Sunucuya ulaşılamadı.";AD.pw=""}
  renderAdmin()}
 function admUser(x){
- if(x.empty)return'<div class="task"><div class="t"><b>'+esc(x.u)+'</b><small> · henüz veri yok</small></div></div>';
+ if(x.empty)return'<div class="task"><div class="t"><b>'+esc(x.u)+'</b><small> · henüz veri yok</small></div><button class="ghost sm" data-act="adm:setpw:'+esc(x.u)+'">Şifre</button><button class="ghost sm" data-act="adm:del:'+esc(x.u)+'">Sil</button></div>';
  var list=function(o,f){var k=Object.keys(o||{});return k.length?k.map(function(a){return'<span class="pill">'+esc(a)+' · '+f(o[a])+'</span>'}).join(""):'<span style="color:var(--mut)">Kayıt yok</span>'};
  var dn=x.tasks.filter(function(t){return t.done}).length;
  return'<details class="card" style="margin-bottom:10px"><summary><b>'+esc(x.u)+'</b> <span style="color:var(--mut)">· '+fmtMin(x.min)+' · '+x.q+' soru · '+x.deneme.length+' deneme</span></summary><div style="margin-top:10px">'+
  '<h3>Ödev planı ('+dn+'/'+x.tasks.length+' yapıldı)</h3>'+(x.tasks.length?x.tasks.map(function(t){return'<div class="task'+(t.done?" done":"")+'"><div class="t">'+esc(t.t)+'<small> · '+esc(t.s)+' · '+fd(t.due)+(t.done?" · yapıldı":" · yapılmadı")+'</small></div></div>'}).join(""):'<div class="empty">Bu dönemde ödev yok.</div>')+
  (x.rut.length?'<h3>Rutinler</h3>'+x.rut.map(function(r){return'<div class="task"><div class="t">'+esc(r.t)+' · '+r.n+' soru<small> · '+(r.days.length===7?"her gün":r.days.map(function(g){return GUN[g]}).join(", "))+'</small></div></div>'}).join(""):"")+
  (x.prog.length?'<h3>Program</h3>'+x.prog.map(function(p){return'<div class="task"><div class="t">'+GUN[p.g]+' '+esc(p.time)+' <span class="tag">'+esc(p.s)+'</span>'+esc(p.note)+'</div></div>'}).join(""):"")+
- '<h3>Çözülen soru: '+x.q+' ('+x.qd+' doğru, '+x.qy+' yanlış)</h3>'+list(x.dersQ,function(v){return v+" soru"})+
+ '<h3>Çözülen soru: '+x.q+' ('+x.qd+' doğru, '+x.qy+' yanlış, '+(x.qb||0)+' boş)</h3>'+list(x.dersQ,function(v){return v+" soru"})+
  '<h3>Çalışma süresi: '+fmtMin(x.min)+'</h3>'+list(x.dersMin,fmtMin)+
  '<h3>Denemeler</h3>'+(x.deneme.length?x.deneme.map(function(d){return'<div class="task"><div class="t">'+esc(d.name)+' <span class="tag">'+esc(d.type)+'</span><small> · '+fd(d.date)+' · '+d.net+' net</small></div></div>'}).join(""):'<div class="empty">Bu dönemde deneme yok.</div>')+
- '<h3>Sayaçlar</h3><span class="pill">31 · '+x.c31+'</span><span class="pill">Bünyamin’e azdım · '+x.c2+'</span></div></details>'}
+ '<h3>Sayaçlar</h3><span class="pill">31 · '+x.c31+'</span><span class="pill">Bünyamin’e azdım · '+x.c2+'</span><h3>Yönetim</h3><div class="row"><button class="ghost sm" data-act="adm:setpw:'+esc(x.u)+'">Şifre değiştir</button><button class="ghost sm" data-act="adm:kick:'+esc(x.u)+'">Oturumları kapat</button><button class="ghost sm" data-act="adm:wipe:'+esc(x.u)+'">Verilerini sil</button><button class="ghost sm" data-act="adm:del:'+esc(x.u)+'">Hesabı sil</button></div></div></details>'}
+
+/* ===== v8: ödev sonucu, yeni Program sekmesi, kısa yollar ===== */
+var DAYS=[["Pt",1],["Sa",2],["Ça",3],["Pe",4],["Cu",5],["Ct",6],["Pz",0]];
+var SHORT=[["Paragraf","Türkçe"],["Problemler","Matematik"],["TYT Matematik","Matematik"],["TYT Fizik","Fizik"],["TYT Kimya","Kimya"],["TYT Biyoloji","Biyoloji"],["TYT Türkçe","Türkçe"],["Geometri","Geometri"],["AYT Matematik","Matematik"],["AYT Fizik","Fizik"],["AYT Kimya","Kimya"],["AYT Biyoloji","Biyoloji"]];
+function dayChips(sel){return DAYS.map(function(d){return'<label class="pill"><input type="checkbox" class="rd" value="'+d[1]+'"'+(sel.indexOf(d[1])>=0?" checked":"")+'> '+d[0]+'</label>'}).join("")}
+function pickDays(){return[].slice.call(document.querySelectorAll(".rd:checked")).map(function(x){return parseInt(x.value,10)})}
+function rr(){renderHome();if(!$("prog").classList.contains("hide"))renderProg2()}
+var _rp3=renderPlan;renderPlan=function(){_rp3();if(!$("prog").classList.contains("hide"))renderProg2()};
+
+/* sonuç / süre */
+function resTxt(k){var o=S.res[k];return o?' · '+o.d+' D · '+o.y+' Y · '+o.b+' B'+(o.dk?' · '+o.dk+' dk':''):""}
+function resInfo(k){if(k.charAt(0)==="t"){var t=S.tasks.filter(function(x){return String(x.id)===k.slice(1)})[0];return t?{title:t.title,ders:t.subj||"",n:t.n||0}:null}
+ var r=S.rutin.filter(function(x){return String(x.id)===k.split("|")[0]})[0];return r?{title:r.title,ders:r.ders,n:r.n}:null}
+function trow2(t){var k="t"+t.id;return'<div class="task'+(t.done?" done":"")+'"><input type="checkbox" '+(t.done?"checked":"")+' data-c="'+t.id+'"><div class="t"><div>'+esc(t.title)+(t.n?' · '+t.n+' soru':'')+'</div><small>'+(t.subj?'<span class="tag">'+esc(t.subj)+'</span>':"")+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+(S.res[k]?"Sonuç":"Sonuç gir")+'</button><button class="x" data-d="'+t.id+'">✕</button></div>'}
+function rrow(r,d){var k=r.id+"|"+d,dn=!!S.rdone[k];return'<div class="task'+(dn?" done":"")+'"><input type="checkbox" '+(dn?"checked":"")+' data-rk="'+k+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+(S.res[k]?"Sonuç":"Sonuç gir")+'</button></div>'}
+function mResK(k){var i=resInfo(k);if(!i)return;var o=S.res[k]||{},v=function(x){return x!=null?x:""};
+ openModal('<h2>'+esc(i.title)+'</h2>'+(i.n?'<div class="empty" style="padding:0 0 8px">Toplam '+i.n+' soru</div>':'')+'<div class="row"><input type="number" id="xD" min="0" placeholder="Doğru" value="'+v(o.d)+'" style="flex:1"><input type="number" id="xY" min="0" placeholder="Yanlış" value="'+v(o.y)+'" style="flex:1"><input type="number" id="xB" min="0" placeholder="Boş" value="'+v(o.b)+'" style="flex:1"></div><div class="row"><input type="number" id="xK" min="0" placeholder="Süre (dk)" value="'+(o.dk||"")+'" style="flex:1"></div><div class="empty" style="padding:0 0 8px">Süre çalışma süresine eklenir. Sayaçla çalıştıysan boş bırak.</div><div class="row"><button data-m="saveRes" data-k="'+esc(k)+'">Kaydet</button>'+(S.res[k]?'<button class="ghost" data-m="clrRes" data-k="'+esc(k)+'">Sonucu sil</button>':"")+'<button class="ghost" data-m="close">Vazgeç</button></div>')}
+function clearRes(k){delete S.res[k];S.sorular=S.sorular.filter(function(s){return s.rk!==k});S.logs=S.logs.filter(function(l){return l.rk!==k})}
+function markDone(k){if(k.charAt(0)==="t")S.tasks.forEach(function(t){if(String(t.id)===k.slice(1))t.done=true});else S.rdone[k]=1}
+function saveRes(k){var i=resInfo(k);if(!i)return;var d=parseInt($("xD").value,10)||0,y=parseInt($("xY").value,10)||0,bs=$("xB").value,b=bs===""?(i.n?Math.max(0,i.n-d-y):0):(parseInt(bs,10)||0),dk=parseInt($("xK").value,10)||0;
+ if(i.n&&d+y+b>i.n){alert("Doğru + yanlış + boş toplamı "+i.n+" soruyu geçemez.");return}
+ if(d+y+b===0&&!dk){alert("En az bir değer gir.");return}
+ clearRes(k);S.res[k]={d:d,y:y,b:b,dk:dk};
+ if(d+y>0)S.sorular.push({id:Date.now(),date:T,ders:i.ders||"Genel",n:d+y,d:d,b:b,rk:k});
+ if(dk>0)S.logs.push({date:iso(new Date()),subj:i.ders||GENEL,sec:dk*60,rk:k});
+ markDone(k);save();closeModal();rr()}
+
+/* ödev ekle / düzenle */
+function mAdd(due){openModal('<h2>Ödev ekle</h2><div class="row"><select id="mD" style="flex:1">'+opts(SUBJ,"","Ders seç")+'</select><input type="number" id="mN" min="1" placeholder="Kaç soru" style="width:110px"></div><input type="text" id="mT" placeholder="Ödev adı (boş bırakırsan ders adı yazılır)" style="width:100%;margin-bottom:8px"><div class="row"><input type="date" id="mDue" value="'+(due||TM)+'"></div><div class="row"><button data-m="addTask">Ekle</button><button class="ghost" data-m="photo">Fotoğraftan ekle</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+function addTaskV2(){var ders=$("mD").value,n=parseInt($("mN").value,10)||0,ti=$("mT").value.trim();
+ if(!ders&&!ti){alert("Ders seç ya da ödev adı yaz.");return}
+ if(!ti)ti=ders+" ödevi";
+ var t={id:Date.now(),title:ti,subj:ders,due:$("mDue").value||TM,done:false};if(n>0)t.n=n;S.tasks.push(t);save();closeModal();rr()}
+function mEditT(id){var t=S.tasks.filter(function(x){return String(x.id)===id})[0];if(!t)return;
+ openModal('<h2>Ödevi düzenle</h2><input type="text" id="eT" value="'+esc(t.title)+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="eD" style="flex:1">'+opts(SUBJ,t.subj,"Ders yok")+'</select><input type="number" id="eN" min="1" placeholder="Soru" value="'+(t.n||"")+'" style="width:100px"></div><div class="row"><input type="date" id="eDue" value="'+t.due+'"></div><div class="row"><button data-m="saveT" data-id="'+id+'">Kaydet</button><button class="ghost" data-m="delT" data-id="'+id+'">Sil</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+function mEditR(id){var r=S.rutin.filter(function(x){return String(x.id)===id})[0];if(!r)return;
+ openModal('<h2>Rutini düzenle</h2><input type="text" id="eT" value="'+esc(r.title)+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="eD" style="flex:1">'+opts(SUBJ,r.ders)+'</select><input type="number" id="eN" min="1" value="'+r.n+'" style="width:100px"></div><div class="row">'+dayChips(r.days)+'</div><div class="row"><button data-m="saveR" data-id="'+id+'">Kaydet</button><button class="ghost" data-m="delR2" data-id="'+id+'">Sil</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+function mShort(i){var s=SHORT[i];openModal('<h2>'+esc(s[0])+' ekle</h2><input type="text" id="sT" value="'+esc(s[0])+'" style="width:100%;margin-bottom:8px"><div class="row"><select id="sD" style="flex:1">'+opts(SUBJ,s[1])+'</select><input type="number" id="sN" min="1" value="20" style="width:100px"><span style="color:var(--mut)">soru</span></div><div class="row">'+dayChips([1,2,3,4,5,6,0])+'</div><label class="pm"><input type="checkbox" id="sRep" checked> Her hafta tekrar et (rutin)</label><div class="empty" style="padding:0 0 8px">İşaretlemezsen sadece bu haftanın seçili günlerine eklenir.</div><div class="row"><button data-m="addShort">Ekle</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+$("mdl").addEventListener("click",function(e){var b=e.target.closest("[data-m]");if(!b)return;var m=b.getAttribute("data-m"),id=b.getAttribute("data-id"),k=b.getAttribute("data-k");
+ if(m==="photo"){closeModal();go("ders");navSync("ders")}
+ else if(m==="saveRes")saveRes(k);
+ else if(m==="clrRes"){clearRes(k);save();closeModal();rr()}
+ else if(m==="saveT"){var t=S.tasks.filter(function(x){return String(x.id)===id})[0];if(!t)return;var ti=$("eT").value.trim();if(!ti){$("eT").focus();return}
+  t.title=ti;t.subj=$("eD").value;t.due=$("eDue").value||t.due;var n=parseInt($("eN").value,10);if(n>0)t.n=n;else delete t.n;save();closeModal();rr()}
+ else if(m==="delT"){if(!confirm("Bu ödev silinsin mi?"))return;clearRes("t"+id);S.tasks=S.tasks.filter(function(x){return String(x.id)!==id});save();closeModal();rr()}
+ else if(m==="saveR"){var r=S.rutin.filter(function(x){return String(x.id)===id})[0];if(!r)return;var ds=pickDays(),rn=parseInt($("eN").value,10),rt=$("eT").value.trim();
+  if(!rt||!(rn>0)||!ds.length){alert("Ad, soru sayısı ve en az bir gün gerekli.");return}r.title=rt;r.ders=$("eD").value;r.n=rn;r.days=ds;save();closeModal();rr()}
+ else if(m==="delR2"){if(!confirm("Bu rutin silinsin mi? (Geçmiş sonuçlar kalır)"))return;S.rutin=S.rutin.filter(function(x){return String(x.id)!==id});save();closeModal();rr()}
+ else if(m==="addShort"){var ti2=$("sT").value.trim(),n2=parseInt($("sN").value,10),ds2=pickDays(),sd=$("sD").value;
+  if(!ti2||!(n2>0)||!ds2.length){alert("Ad, soru sayısı ve en az bir gün gerekli.");return}
+  if($("sRep").checked)S.rutin.push({id:Date.now(),title:ti2,ders:sd,n:n2,days:ds2});
+  else{var c=0;wkDays(0).forEach(function(d){if(ds2.indexOf(new Date(d+"T12:00:00").getDay())>=0)S.tasks.push({id:Date.now()+(c++),title:ti2,subj:sd,due:d,done:false,n:n2})})}
+  save();closeModal();rr()}});
+
+/* Program sekmesi */
+function prow(t){var k="t"+t.id;return'<div class="task'+(t.done?" done":"")+'"><div class="t"><div>'+esc(t.title)+(t.n?' · '+t.n+' soru':'')+'</div><small>'+(t.subj?'<span class="tag">'+esc(t.subj)+'</span>':"")+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">Süre</button><button class="ghost sm" data-act="edt:'+t.id+'">Düzenle</button></div>'}
+function prowR(r,d){var k=r.id+"|"+d;return'<div class="task'+(S.rdone[k]?" done":"")+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">Süre</button><button class="ghost sm" data-act="edr:'+r.id+'">Düzenle</button></div>'}
+function renderProg2(){var wd=wkDays(0),old=[];
+ Object.keys(S.program||{}).forEach(function(g){(S.program[g]||[]).forEach(function(x){if(!x.tid)old.push({g:g,x:x})})});
+ var h='<div class="card"><h2>Kısa yollar</h2><div class="row">'+SHORT.map(function(s,i){return'<button class="ghost sm" data-act="sc:'+i+'">'+esc(s[0])+'</button>'}).join("")+'</div><div class="empty" style="padding:0">Birine bas: günleri, soru sayısını ve adı seç. İstersen her haftaya rutin olarak eklenir.</div></div>'+
+ '<div class="card" style="margin-top:12px"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Bu haftanın planı</h2><button class="sm" data-act="add">+ Ödev</button></div>';
+ wd.forEach(function(d,i){var ts=S.tasks.filter(function(t){return t.due===d}),rs=S.rutin.filter(function(r){return rutDay(r,d)});
+  h+='<div class="row" style="justify-content:space-between;margin:14px 0 6px"><div class="grp'+(d===T?" today":"")+'" style="margin:0">'+DN[i]+' '+fd(d)+'</div><button class="ghost sm" data-act="pdd:'+d+'">+</button></div>';
+  h+=(ts.length||rs.length)?ts.map(prow).join("")+rs.map(function(r){return prowR(r,d)}).join(""):'<div class="empty">—</div>'});
+ h+='</div><div class="card" style="margin-top:12px"><h2>Rutinlerim</h2>'+(S.rutin.length?S.rutin.map(function(r){return'<div class="task"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small>'+esc(r.ders)+' · '+(r.days.length===7?"her gün":DAYS.filter(function(d){return r.days.indexOf(d[1])>=0}).map(function(d){return d[0]}).join(" "))+'</small></div><button class="ghost sm" data-act="edr:'+r.id+'">Düzenle</button></div>'}).join(""):'<div class="empty">Henüz rutin yok. Yukarıdan bir kısa yola bas.</div>')+'</div>';
+ if(old.length)h+='<details class="card" style="margin-top:12px"><summary><b>Eski program kayıtları</b> <span style="color:var(--mut)">('+old.length+')</span></summary><div style="margin-top:8px">'+old.map(function(o){return'<div class="task"><div class="t"><b>'+GUN[o.g]+'</b> '+esc(o.x.time||"")+' <span class="tag">'+esc(o.x.subj)+'</span>'+esc(o.x.note)+'</div><button class="x" data-act="opd:'+o.g+':'+o.x.id+'">✕</button></div>'}).join("")+'</div></details>';
+ $("prog2").innerHTML=h}
+
+/* yönetici: hesap yönetimi */
+async function admAct(kind,u){var body={pw:AD.pw,user:u},a;
+ if(kind==="setpw"){var np=prompt(u+" için yeni şifre (en az 6 karakter):");if(!np)return;body.newpw=np;a="admin_setpw"}
+ else if(kind==="kick"){if(!confirm(u+" hesabının tüm oturumları kapatılsın mı?"))return;a="admin_kick"}
+ else if(kind==="wipe"){if(!confirm(u+" hesabının TÜM VERİLERİ silinsin mi? Bu geri alınamaz."))return;a="admin_wipe"}
+ else if(kind==="del"){if(!confirm(u+" hesabı ve tüm verileri SİLİNSİN mi? Bu geri alınamaz."))return;a="admin_del"}
+ else return;
+ try{var r=await api(a,body);alert(r.ok?"Tamam.":(r.error==="Bilinmeyen işlem"?"Apps Script kodunu güncelleyip yeniden dağıtman gerekiyor.":(r.error||"Hata")));if(r.ok)loadAdmin()}catch(e){alert("Sunucuya ulaşılamadı.")}}
+async function admNew(){var u=prompt("Yeni kullanıcı adı:");if(!u)return;var p=prompt("Şifre (en az 6 karakter):");if(!p)return;
+ try{var r=await api("admin_create",{pw:AD.pw,user:u,newpw:p});alert(r.ok?"Hesap oluşturuldu.":(r.error||"Hata"));if(r.ok)loadAdmin()}catch(e){alert("Sunucuya ulaşılamadı.")}}
+
+/* fotoğraftan ekleme: soru sayısıyla */
+$("dsPrev").onclick=function(e){if(e.target.id!=="dsAdd")return;var n=0;
+ Array.prototype.forEach.call($("dsPrev").querySelectorAll("input[data-pi]"),function(cb){if(!cb.checked)return;var o=dsItems[parseInt(cb.getAttribute("data-pi"),10)];
+  var due=/^\d{4}-\d{2}-\d{2}$/.test(o.teslim)?o.teslim:TM,sq=parseInt(o.soru,10),t={id:Date.now()+n,title:String(o.baslik).slice(0,200),subj:SUBJ.indexOf(o.ders)>=0?o.ders:"",due:due,done:false};
+  if(sq>0&&sq<=500)t.n=sq;S.tasks.push(t);n++});
+ S.lastDs=T;dsItems=[];$("dsPrev").innerHTML="";save();renderPlan();$("dsMsg").textContent=n+" ödev listeye eklendi."};
 
 buildForm();renderAll();
 boot();
