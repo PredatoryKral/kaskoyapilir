@@ -1,6 +1,6 @@
 // Vercel sunucu fonksiyonu: giriş yapmış kullanıcıların istekleri ortak Gemini anahtarıyla yanıtlanır.
 // Vercel ortam değişkenleri: GEMINI_API_KEY (zorunlu), APPS_SCRIPT_URL (isteğe bağlı), GEMINI_MODEL (isteğe bağlı)
-const APPS_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbz1-WM0vbSUeZuKwDRHvhGEJJHzkOvnUmcW1So6pRB5wSheMSxpksN5u07UN3FXddMr/exec';
+const APPS_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbwSn0Fg6c5crShQLu48u78oREJLMtycYhrQy62_-Rpzbe1ZBZWWUCxlkuXrXynnXzQ-/exec';
 
 async function checkUser(token) {
   const r = await fetch(APPS_URL, {
