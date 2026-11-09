@@ -2,7 +2,7 @@
 // Vercel ortam değişkenleri: GEMINI_API_KEY (zorunlu), GEMINI_MODEL, GEMINI_FALLBACK_MODEL, APPS_SCRIPT_URL (isteğe bağlı)
 // Tarayıcıda /api/gemini adresini açarsan ayarların durumunu gösterir. /api/gemini?test=1 Gemini'ye küçük bir deneme isteği atar.
 const APPS_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbwSn0Fg6c5crShQLu48u78oREJLMtycYhrQy62_-Rpzbe1ZBZWWUCxlkuXrXynnXzQ-/exec';
-const MODELS = [process.env.GEMINI_MODEL || 'gemini-2.5-flash', process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash-lite'];
+const MODELS = [process.env.GEMINI_MODEL || 'gemini-3.1-flash', process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-flash-lite'];
 
 async function appsPost(payload) {
   const r = await fetch(APPS_URL, {
