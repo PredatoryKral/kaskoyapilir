@@ -313,7 +313,7 @@ button{box-shadow:none;border-radius:12px}button.ghost{border:0}
    var last=msgs[msgs.length-1];parts.push({type:"text",text:String(last.content)});last.content=parts}
   var r=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json","x-token":getToken()},body:JSON.stringify({messages:msgs,json:!!wantJson})});
   if(r.status===401){alert("Oturum yok ya da süresi doldu. Tekrar giriş yap.");throw new Error("unauthorized")}if(r.status===429){alert("Bugünkü yapay zekâ kullanım limitin doldu. Yarın tekrar dene.");throw new Error("limit")}
-  if(!r.ok)throw new Error("api "+r.status);
+  if(!r.ok){var ej={};try{ej=await r.json()}catch(x){}alert("Yapay zekâ hatası ("+r.status+"): "+(ej.error||"bilinmiyor"));throw new Error("api "+r.status)}
   var d=await r.json(),text=d.text||"";
   if(opts&&opts.onText)opts.onText({text:text});
   if(!wantJson)return{text:text};
