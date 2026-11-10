@@ -2,7 +2,7 @@
 // Vercel ortam değişkenleri: GEMINI_API_KEY (zorunlu), GEMINI_MODEL, GEMINI_FALLBACK_MODEL, APPS_SCRIPT_URL (isteğe bağlı)
 // Tarayıcıda /api/gemini adresini açarsan ayarların durumunu gösterir. /api/gemini?test=1 Gemini'ye küçük bir deneme isteği atar.
 const APPS_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbwSn0Fg6c5crShQLu48u78oREJLMtycYhrQy62_-Rpzbe1ZBZWWUCxlkuXrXynnXzQ-/exec';
-const MODELS = [process.env.GEMINI_MODEL || 'gemini-3.1-flash', process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-flash-lite'];
+const MODELS = [process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite', process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash-lite'];
 
 async function appsPost(payload) {
   const r = await fetch(APPS_URL, {
@@ -48,6 +48,15 @@ module.exports = async (req, res) => {
         }
       }
     } else out.gemini_test = 'Denemek icin adresin sonuna ?test=1 ekle';
+    if (req.query && req.query.models === '1' && key) {
+      try {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': key } });
+        const d = await r.json();
+        out.kullanilabilir_modeller = r.ok
+          ? (d.models || []).filter((m) => (m.supportedGenerationMethods || []).includes('generateContent')).map((m) => m.name.replace('models/', '')).filter((n) => /flash/.test(n))
+          : { durum: r.status, mesaj: d.error && d.error.message };
+      } catch (e) { out.kullanilabilir_modeller = 'istek atilamadi'; }
+    }
     return res.status(200).json(out);
   }
 
