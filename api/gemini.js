@@ -9,15 +9,17 @@ async function appsPost(payload) {
     method: 'POST',
     headers: { 'content-type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(10000),
   });
   return r.json();
 }
 
-async function callGemini(model, key, body) {
+async function callGemini(model, key, body, ms) {
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
     headers: { 'x-goog-api-key': key, 'content-type': 'application/json' },
     body,
+    signal: AbortSignal.timeout(ms),
   });
   let d = {};
   try { d = await r.json(); } catch (e) {}
@@ -93,11 +95,14 @@ module.exports = async (req, res) => {
     generationConfig: { maxOutputTokens: 4096, ...(json ? { responseMimeType: 'application/json' } : {}) },
   });
 
+  const start = Date.now();
   let last = { status: 0, msg: 'bilinmeyen hata', model: MODELS[0] };
   try {
     for (const model of MODELS) {
       for (let attempt = 0; attempt < 2; attempt++) {
-        const { r, d } = await callGemini(model, key, body);
+        const remaining = 52000 - (Date.now() - start);
+        if (remaining < 8000) { last = { status: 504, msg: 'zaman asimi', model }; break; }
+        const { r, d } = await callGemini(model, key, body, remaining);
         if (r.ok) {
           const parts = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
           const text = parts.map((p) => p.text || '').join('');
@@ -108,10 +113,15 @@ module.exports = async (req, res) => {
         if (![429, 500, 503].includes(r.status)) break;
         await new Promise((ok) => setTimeout(ok, 1500));
       }
+      if (last.status === 504) break;
     }
   } catch (e) {
+    if (e && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+      return res.status(504).json({ error: 'Gemini zamanında yanıt vermedi (dosya büyük ya da yoğunluk var). Daha az ya da küçük dosyayla tekrar dene.' });
+    }
     return res.status(500).json({ error: 'sunucu hatasi: ' + String(e && e.message).slice(0, 120) });
   }
+  if (last.status === 504) return res.status(504).json({ error: 'Gemini zamanında yanıt vermedi (dosya büyük ya da yoğunluk var). Daha az ya da küçük dosyayla tekrar dene.' });
   const busy = [429, 500, 503].includes(last.status);
   return res.status(502).json({
     error: (busy ? 'Gemini şu an yoğun ya da kotan doldu. ' : 'Gemini hatası. ') + '(' + last.status + ', model ' + last.model + '): ' + String(last.msg).slice(0, 200),
