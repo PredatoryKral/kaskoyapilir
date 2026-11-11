@@ -183,6 +183,12 @@ input[type=checkbox]:checked::after{content:"";position:absolute;inset:0;backgro
 .task .pill input[type=checkbox]{width:18px;height:18px;border-radius:5px;margin:0 4px 0 0}
 .task select.pwk{padding:6px 8px;font-size:.85rem}
 @media print{body{font-size:11px}.wrap{padding:0}.card{padding:10px!important;margin:0 0 6px!important}h2{font-size:14px;margin:0 0 6px}h3{margin:8px 0 3px;font-size:12px}.task{padding:3px 8px;margin-bottom:2px}.stat b{font-size:15px}.grid.stats{gap:6px}.bl{margin-bottom:2px}.empty{padding:2px 0}}
+input[type=checkbox]::after,input[type=checkbox]:checked::after{content:none!important;display:none!important}
+input[type=checkbox]{box-sizing:border-box;padding:0;display:inline-block;background-clip:border-box}
+input[type=checkbox]:checked{background:var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 12.5 10 17.5 19 7.5'/%3E%3C/svg%3E") 50% 50%/70% 70% no-repeat;border-color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) input[type=checkbox]:checked{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 12.5 10 17.5 19 7.5'/%3E%3C/svg%3E")}}
+:root[data-theme="dark"] input[type=checkbox]:checked{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 12.5 10 17.5 19 7.5'/%3E%3C/svg%3E")}
+:root[data-theme="light"] input[type=checkbox]:checked{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 12.5 10 17.5 19 7.5'/%3E%3C/svg%3E")}
 </style>
 </head>
 <body data-tab="plan">
@@ -334,7 +340,7 @@ input[type=checkbox]:checked::after{content:"";position:absolute;inset:0;backgro
    var last=msgs[msgs.length-1];parts.push({type:"text",text:String(last.content)});last.content=parts}
   var r=await fetch("/api/gemini",{method:"POST",headers:{"Content-Type":"application/json","x-token":getToken()},body:JSON.stringify({messages:msgs,json:!!wantJson})});
   if(r.status===401)throw new Error("Oturum yok ya da süresi doldu. Tekrar giriş yap.");if(r.status===429)throw new Error("Bugünkü yapay zekâ kullanım limitin doldu. Yarın tekrar dene.");
-  if(!r.ok){var ej={};try{ej=await r.json()}catch(x){}throw new Error("Yapay zekâ hatası ("+r.status+"): "+(ej.error||"bilinmiyor"))}
+  if(!r.ok){var ej={};try{ej=await r.json()}catch(x){}throw new Error("Yapay zekâ hatası ("+r.status+"): "+(ej.error||(r.status===504?"zaman aşımı: dosya büyük ya da Gemini yavaş. Daha az ya da küçük dosyayla tekrar dene":"bilinmiyor")))}
   var d=await r.json(),text=d.text||"";
   if(opts&&opts.onText)opts.onText({text:text});
   if(!wantJson)return{text:text};
@@ -475,7 +481,7 @@ $("aiBtn").onclick=async function(){
  var o=$("aiOut");o.classList.remove("hide");o.textContent="Düşünüyor…";$("aiBtn").disabled=true;
  var week=[];for(var k=6;k>=0;k--)week.push({gun:addDays(-k),dk:Math.round(minsOn(addDays(-k)))});
  var data={tur:$("aType").value,denemeler:l.map(function(x){return{ad:x.name,tarih:x.date,net:totNet(x),dersler:x.sc,yanlisKonular:x.konular||[]}}),konuYanlis:konuSay(l),dersOrtalamalari:stats(l),sonHaftaCalismaDk:week};
- var prompt="Sen deneyimli bir YKS koçusun. Türkçe, samimi ve kısa yaz (en fazla 250 kelime). Aşağıdaki deneme verilerini analiz et: 1) genel trend, 2) en zayıf 2-3 ders ve neden (yanlış sayısı/doğruluk), 3) yanlisKonular ve konuYanlis alanlarını kullanarak hangi konulardan yanlış yapıldığını belirt, 4) bu hafta bu konulara göre somut 4-5 maddelik çalışma planı yap (konu bilgisi yoksa bunu da söyle). Net = doğru - yanlış/4.\nVeri:\n"+JSON.stringify(data)+(pdfText?"\n\nYüklenen deneme PDF’inden metin (ek bağlam):\n"+pdfText.slice(0,6000):"");
+ var prompt="Sen deneyimli bir YKS koçusun. Türkçe, samimi ve kısa yaz (en fazla 250 kelime). Aşağıdaki deneme verilerini analiz et: 1) genel trend, 2) en zayıf 2-3 ders ve neden (yanlış sayısı/doğruluk), 3) analizi esas olarak ders bazlı doğru/yanlış/net verilerine dayandır; yanlisKonular ve konuYanlis alanları doluysa o konulara da değin, boşsa konu uydurma, 4) bu hafta için somut 4-5 maddelik çalışma planı yap. Net = doğru - yanlış/4.\nVeri:\n"+JSON.stringify(data)+(pdfText?"\n\nYüklenen deneme PDF’inden metin (ek bağlam):\n"+pdfText.slice(0,6000):"");
  try{await sample(prompt,{onText:function(r){o.innerHTML=md(r.text)},cache:false})}catch(e){if(e&&e.code==="not_granted")$("aiCard").classList.add("hide");else o.textContent="Şu an analiz alınamadı, biraz sonra tekrar dene."}
  $("aiBtn").disabled=false};
 
@@ -589,7 +595,7 @@ $("dsIn").onchange=async function(){dsImgs=[];dsDoc="";dsItems=[];$("dsPrev").in
    var pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,txt="",n=Math.min(pdf.numPages,6);
    for(var p=1;p<=n;p++){var c=await(await pdf.getPage(p)).getTextContent();txt+=c.items.map(function(x){return x.str}).join(" ")+"\n"}
    if(txt.trim().length>=30)dsDoc+=txt+"\n";
-   else for(var q=1;q<=Math.min(n,3);q++){var pg=await pdf.getPage(q),vp=pg.getViewport({scale:1.5}),cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;
+   else for(var q=1;q<=Math.min(n,3);q++){var pg=await pdf.getPage(q),vp=pg.getViewport({scale:1.3}),cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;
     dsImgs.push(await new Promise(function(res){cv.toBlob(res,"image/jpeg",.85)}))}
   }catch(e){}}
   else{try{dsDoc+=await f.text()+"\n"}catch(e){}}}
@@ -930,7 +936,7 @@ function renderHome(){
  $("home2").innerHTML=h;tmLabel()}
 var _rp2=renderPlan;renderPlan=function(){_rp2();renderHome()};
 $("home2").addEventListener("click",function(e){var t=e.target,c=t.getAttribute("data-c"),d=t.getAttribute("data-d"),rk=t.getAttribute("data-rk");
- if(c){S.tasks.forEach(function(x){if(String(x.id)===c)x.done=t.checked});save();renderHome()}
+ if(c){e.preventDefault();var tk=S.tasks.filter(function(x){return String(x.id)===c})[0];if(tk){if(tk.done){if(S.res["t"+c]&&!confirm("İşareti kaldırırsan girdiğin sonuç silinir. Devam edilsin mi?"))return;clearRes("t"+c);tk.done=false;save();renderHome()}else mResK("t"+c)}}
  if(d){clearRes("t"+d);S.tasks=S.tasks.filter(function(x){return String(x.id)!==d});save();renderHome()}
  if(rk){e.preventDefault();if(S.rdone[rk]){delete S.rdone[rk];clearRes(rk);save();renderHome()}
   else{var r=S.rutin.filter(function(x){return String(x.id)===rk.split("|")[0]})[0];if(r)mResK(rk)}}});
@@ -1044,8 +1050,8 @@ var _rp3=renderPlan;renderPlan=function(){_rp3();if(!$("prog").classList.contain
 function resTxt(k){var o=S.res[k];return o?' · '+o.d+' D · '+o.y+' Y · '+o.b+' B'+(o.dk?' · '+o.dk+' dk':''):""}
 function resInfo(k){if(k.charAt(0)==="t"){var t=S.tasks.filter(function(x){return String(x.id)===k.slice(1)})[0];return t?{title:t.title,ders:t.subj||"",n:t.n||0}:null}
  var r=S.rutin.filter(function(x){return String(x.id)===k.split("|")[0]})[0];return r?{title:r.title,ders:r.ders,n:r.n}:null}
-function trow2(t){var k="t"+t.id;return'<div class="task'+(t.done?" done":"")+'"><input type="checkbox" '+(t.done?"checked":"")+' data-c="'+t.id+'"><div class="t"><div data-act="edt:'+t.id+'" style="cursor:pointer">'+esc(t.title)+(t.n?' · '+t.n+' soru':'')+'</div><small>'+(t.subj?'<span class="tag">'+esc(t.subj)+'</span>':"")+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+(S.res[k]?"Sonuç":"Sonuç gir")+'</button></div>'}
-function rrow(r,d){var k=r.id+"|"+d,dn=!!S.rdone[k];return'<div class="task'+(dn?" done":"")+'"><input type="checkbox" '+(dn?"checked":"")+' data-rk="'+k+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+(S.res[k]?"Sonuç":"Sonuç gir")+'</button></div>'}
+function trow2(t){var k="t"+t.id;return'<div class="task'+(t.done?" done":"")+'"><input type="checkbox" '+(t.done?"checked":"")+' data-c="'+t.id+'"><div class="t"><div data-act="edt:'+t.id+'" style="cursor:pointer">'+esc(t.title)+(t.n?' · '+t.n+' soru':'')+'</div><small>'+(t.subj?'<span class="tag">'+esc(t.subj)+'</span>':"")+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+"Sonuç gir"+'</button></div>'}
+function rrow(r,d){var k=r.id+"|"+d,dn=!!S.rdone[k];return'<div class="task'+(dn?" done":"")+'"><input type="checkbox" '+(dn?"checked":"")+' data-rk="'+k+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+"Sonuç gir"+'</button></div>'}
 function mResK(k){var i=resInfo(k);if(!i)return;var o=S.res[k]||{},v=function(x){return x!=null?x:""};
  openModal('<h2>'+esc(i.title)+'</h2>'+(i.n?'<div class="empty" style="padding:0 0 8px">Toplam '+i.n+' soru</div>':'')+'<div class="row"><input type="number" id="xD" min="0" placeholder="Doğru" value="'+v(o.d)+'" style="flex:1"><input type="number" id="xY" min="0" placeholder="Yanlış" value="'+v(o.y)+'" style="flex:1"><input type="number" id="xB" min="0" placeholder="Boş" value="'+v(o.b)+'" style="flex:1"></div><div class="row"><input type="number" id="xK" min="0" placeholder="Süre (dk)" value="'+(o.dk||"")+'" style="flex:1"></div><div class="empty" style="padding:0 0 8px">Süre çalışma süresine eklenir. Sayaçla çalıştıysan boş bırak.</div><div class="row"><button data-m="saveRes" data-k="'+esc(k)+'">Kaydet</button>'+(S.res[k]?'<button class="ghost" data-m="clrRes" data-k="'+esc(k)+'">Sonucu sil</button>':"")+'<button class="ghost" data-m="close">Vazgeç</button></div>')}
 function clearRes(k){delete S.res[k];S.sorular=S.sorular.filter(function(s){return s.rk!==k});S.logs=S.logs.filter(function(l){return l.rk!==k})}
@@ -1161,7 +1167,7 @@ async function aiRun(kind,prompt,shown,opts){
 $("aiBtn").onclick=function(){var l=pick();if(!l.length){alert("Önce deneme ekle.");return}
  var wk=[];for(var k=6;k>=0;k--)wk.push({gun:addDays(-k),dk:Math.round(minsOn(addDays(-k)))});
  var data={tur:$("aType").value,denemeler:l.map(function(x){return{ad:x.name,tarih:x.date,net:totNet(x),dersler:x.sc,yanlisKonular:x.konular||[]}}),konuYanlis:konuSay(l),dersOrtalamalari:stats(l),sonHaftaCalismaDk:wk};
- aiRun("Deneme analizi","Sen deneyimli bir YKS koçusun. Türkçe, samimi ve kısa yaz (en fazla 250 kelime). Aşağıdaki deneme verilerini analiz et: 1) genel trend, 2) en zayıf 2-3 ders ve neden (yanlış sayısı/doğruluk), 3) yanlisKonular ve konuYanlis alanlarını kullanarak hangi konulardan yanlış yapıldığını belirt, 4) bu hafta bu konulara göre somut 4-5 maddelik çalışma planı yap (konu bilgisi yoksa bunu da söyle). Net = doğru - yanlış/4.\nVeri:\n"+JSON.stringify(data),"Deneme analizi ("+$("aType").value+")")};
+ aiRun("Deneme analizi","Sen deneyimli bir YKS koçusun. Türkçe, samimi ve kısa yaz (en fazla 250 kelime). Aşağıdaki deneme verilerini analiz et: 1) genel trend, 2) en zayıf 2-3 ders ve neden (yanlış sayısı/doğruluk), 3) analizi esas olarak ders bazlı doğru/yanlış/net verilerine dayandır; yanlisKonular ve konuYanlis alanları doluysa o konulara da değin, boşsa konu uydurma, 4) bu hafta için somut 4-5 maddelik çalışma planı yap. Net = doğru - yanlış/4.\nVeri:\n"+JSON.stringify(data),"Deneme analizi ("+$("aType").value+")")};
 function ozAi(){aiRun("Özet yorumu","Sen deneyimli bir YKS koçusun. Türkçe, samimi ve kısa (en fazla 180 kelime) yaz. Aşağıdaki özeti yorumla: iyi giden bir şey, eksik kalanlar, bir sonraki dönem için 3 somut öneri.\n"+JSON.stringify(ozData),"Özet yorumu ("+ozData.donem+")")}
 async function yzAsk(){var t=$("yzQ").value.trim(),f=$("yzImg").files[0];if(!t&&!f)return;var o={};
  if(f){if(!(await imgOK())){alert("Bu görünümde görsel gönderilemiyor.");return}o.images=[await shrink(f)]}
@@ -1218,7 +1224,7 @@ async function readPdfFile(f){var out={text:"",imgs:[]};if(!window.pdfjsLib)retu
  var pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,n=Math.min(pdf.numPages,6),txt="";
  for(var p=1;p<=n;p++){var c=await(await pdf.getPage(p)).getTextContent();txt+=c.items.map(function(x){return x.str}).join(" ")+"\n"}
  if(txt.trim().length>=30)out.text=txt;
- for(var q=1;q<=Math.min(n,3);q++){var pg=await pdf.getPage(q),vp=pg.getViewport({scale:1.5}),cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;out.imgs.push(await new Promise(function(res){cv.toBlob(res,"image/jpeg",.85)}))}
+ for(var q=1;q<=Math.min(n,3);q++){var pg=await pdf.getPage(q),vp=pg.getViewport({scale:1.3}),cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;out.imgs.push(await new Promise(function(res){cv.toBlob(res,"image/jpeg",.85)}))}
  return out}
 var pdfImgs=[];
 $("pdfIn").setAttribute("accept","application/pdf,image/*");$("pdfIn").multiple=true;
@@ -1296,6 +1302,19 @@ function manualSum(d){var q=S.sorular.filter(function(s){return s.rk&&s.rk.index
 function localizeBoard(u){var r0=prange(BD.p),inR=function(d){return d>=r0.from&&d<=r0.to},out=[],f=false,
  me={u:ME,min:Math.round(sum(S.logs.filter(function(l){return inR(l.date)}),function(l){return l.sec/60})),q:sum(S.sorular.filter(function(s){return inR(s.date)}),function(s){return s.n}),c31:(S.sayac&&S.sayac.a)||0};
  u.forEach(function(x){if(x.u===ME){out.push(me);f=true}else out.push({u:x.u,min:x.min||0,q:x.q||0,c31:x.c31||0})});if(!f&&ME)out.push(me);return out.sort(function(a,b){return b[BD.c]-a[BD.c]})}
+
+/* ===== v13: sonuç penceresi (soru sayısı), tikte her zaman sonuç, analiz etiketi ===== */
+function mResK(k){var i=resInfo(k);if(!i)return;var o=S.res[k]||{},v=function(x){return x!=null?x:""},nn=o.n!=null?o.n:(i.n||"");
+ openModal('<h2>'+esc(i.title)+'</h2><div class="row"><label style="flex:1;color:var(--mut);font-size:.8rem">Soru sayısı (çözülen)<input type="number" id="xN" min="0" value="'+nn+'" style="width:100%;margin-top:2px"></label></div><div class="row"><input type="number" id="xD" min="0" placeholder="Doğru" value="'+v(o.d)+'" style="flex:1"><input type="number" id="xY" min="0" placeholder="Yanlış" value="'+v(o.y)+'" style="flex:1"><input type="number" id="xB" min="0" placeholder="Boş (otomatik)" value="'+v(o.b)+'" style="flex:1"></div><div class="row"><input type="number" id="xK" min="0" placeholder="Süre (dk)" value="'+(o.dk||"")+'" style="flex:1"></div><div class="empty" style="padding:0 0 8px">Soru sayısı ödevden gelir; hepsini çözmediysen düzelt. Boş kutusu boşsa kalan sorular boş sayılır ve çözülen soruya eklenmez. Süre çalışma süresine eklenir (sayaçla çalıştıysan boş bırak).</div><div class="row"><button data-m="saveRes" data-k="'+esc(k)+'">Kaydet</button>'+(S.res[k]?'<button class="ghost" data-m="clrRes" data-k="'+esc(k)+'">Sonucu sil</button>':"")+'<button class="ghost" data-m="close">Vazgeç</button></div>')}
+function saveRes(k){var i=resInfo(k);if(!i)return;var N=parseInt($("xN").value,10)||0,d=parseInt($("xD").value,10)||0,y=parseInt($("xY").value,10)||0,bs=$("xB").value,b=bs===""?Math.max(0,N-d-y):(parseInt(bs,10)||0),dk=parseInt($("xK").value,10)||0;
+ if(N&&d+y+b>N){alert("Doğru + yanlış + boş toplamı "+N+" soruyu geçemez.");return}
+ if(d+y+b===0&&!dk){alert("En az bir değer gir.");return}
+ clearRes(k);S.res[k]={d:d,y:y,b:b,dk:dk,n:N};
+ if(d+y>0)S.sorular.push({id:Date.now(),date:T,ders:i.ders||"Genel",n:d+y,d:d,b:b,rk:k});
+ if(dk>0)S.logs.push({date:iso(new Date()),subj:i.ders||GENEL,sec:dk*60,rk:k});
+ markDone(k);save();closeModal();rr()}
+var _ra3=renderAnaliz;renderAnaliz=function(){_ra3();try{$("aiBtn").textContent="Analiz et · "+$("aN").selectedOptions[0].text.toLowerCase()+" deneme"}catch(e){}};
+$("aType").onchange=renderAnaliz;$("aN").onchange=renderAnaliz;
 
 buildForm();renderAll();
 boot();
