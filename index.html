@@ -219,10 +219,12 @@ input[type=checkbox]:checked{background:var(--ink) url("data:image/svg+xml,%3Csv
 .mk-l{padding:8px}.mk-row{padding:9px 10px;border-radius:8px;font-size:.8rem;margin-bottom:4px;background:rgba(255,255,255,.06)}.mk-row.mk-hl{background:rgba(255,255,255,.28)}.mk-btn{display:inline-block;margin-top:10px;padding:7px 28px;border-radius:10px}
 @keyframes mkpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.55);transform:scale(1)}50%{box-shadow:0 0 0 10px rgba(255,255,255,0);transform:scale(1.07)}}
 .a2-d{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3)}.a2-d.on{background:#fff}
+#wk:not(.hide){position:fixed;inset:0;z-index:800;background:radial-gradient(120% 90% at 50% 0%,#2a2a35,#09090c);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.wk-g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:100%}.wk-b{background:rgba(255,255,255,.12);color:#fff;box-shadow:none;border:1px solid rgba(255,255,255,.25);padding:12px}.wk-b.on{background:#fff;color:#000}
 </style>
 </head>
 <body data-tab="plan">
-<div id="ws" class="hide"></div><div id="a2" class="hide"></div>
+<div id="wk" class="hide"></div><div id="ws" class="hide"></div><div id="a2" class="hide"></div>
 <div id="mdl" class="hide"></div>
 <div id="fsT" class="hide"><div class="fsnow" id="fsNow"></div><div class="fsc" id="fsClock">00:00:00</div><div class="fsb"><button data-act="tmT" id="fsTb">Başlat</button><button class="ghost" data-act="tmS">Kaydet</button><button class="ghost" data-act="tmR">Sıfırla</button><button class="ghost" data-act="tmX">Çık</button></div></div>
 <iframe name="pwsink" style="display:none" tabindex="-1" title=""></iframe><div id="auth"><div class="card authbox">
@@ -941,7 +943,7 @@ function tmLabel(){var t=T2.run?"Durdur":(T2.el>0?"Devam":"Başlat");["tmTb","fs
 function tmTick(){var c=fmt(tmNow());["tmClock","fsClock"].forEach(function(i){if($(i))$(i).textContent=c})}
 setInterval(tmTick,250);
 function tmToggle(){if(T2.run){T2.el=tmNow();T2.run=false}else{T2.t0=Date.now();T2.run=true}tmLabel();tmTick()}
-function tmSave(){var s=tmNow();if(s<10){alert("10 saniyeden kısa süre kaydedilmez.");return}S.logs.push({date:iso(new Date()),subj:T2.subj,sec:s});T2.el=0;T2.run=false;save();renderHome();tmLabel();tmTick()}
+function tmSave(){var s=tmNow();if(s<10){alert("10 saniyeden kısa süre kaydedilmez.");return}S.logs.push({date:T2.sd||iso(new Date()),subj:T2.subj,sec:s});T2.el=0;T2.run=false;save();renderHome();tmLabel();tmTick()}
 function tmReset(){if(tmNow()>60&&!confirm("Sayaç kaydedilmeden sıfırlansın mı?"))return;T2.el=0;T2.run=false;tmLabel();tmTick()}
 async function fsOpen(){$("fsT").classList.remove("hide");tmLabel();tmTick();try{if(navigator.wakeLock)wl2=await navigator.wakeLock.request("screen")}catch(e){}try{await document.documentElement.requestFullscreen()}catch(e){}}
 function fsClose(){$("fsT").classList.add("hide");try{if(wl2){wl2.release();wl2=null}if(document.fullscreenElement)document.exitFullscreen()}catch(e){}}
@@ -1158,7 +1160,7 @@ $("dsPrev").onclick=function(e){if(e.target.id!=="dsAdd")return;var n=0;
 /* ===== v9: yapay zekâ paneli, soru gir, sayaç kalıcı, hız ===== */
 var BRANS=["Fen Branş Denemesi","Matematik Branş Denemesi"];
 function todayFirst(a){var t=a.indexOf(T);return t<0?a:[a[t]].concat(a.filter(function(x){return x!==T}))}
-function futHtml(fut,rowf){var out="",last="";fut.forEach(function(t){if(t.due!==last){last=t.due;out+='<div class="grp">'+DN[(new Date(t.due+"T12:00:00").getDay()+6)%7]+' '+fd(t.due)+'</div>'}out+=rowf(t)});return out}
+function futHtml(fut,rowf){var out="",last="";fut.forEach(function(t){if(t.due!==last){last=t.due;out+='<div class="grp">'+DN[(new Date(t.due+"T12:00:00").getDay()-S.cfg.ws+7)%7]+' '+fd(t.due)+'</div>'}out+=rowf(t)});return out}
 function mdx(t){return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}
 var _en3=ensure;ensure=function(){_en3();S.ai=S.ai||[]};ensure();
 TABS.push("yz");
@@ -1166,8 +1168,8 @@ document.body.setAttribute("data-tab","plan");
 $("tabs").addEventListener("click",function(e){var b=e.target.closest("button");if(b)document.body.setAttribute("data-tab",b.getAttribute("data-t"))});
 
 /* sayaç yenilemede sıfırlanmasın */
-function tmPersist(){try{localStorage.setItem("yks-timer",JSON.stringify({el:T2.el,run:T2.run,t0:T2.t0,subj:T2.subj}))}catch(e){}}
-try{var tp=JSON.parse(localStorage.getItem("yks-timer")||"null");if(tp&&typeof tp.el==="number"){T2.el=tp.el;T2.run=!!tp.run;T2.t0=tp.t0||Date.now();if(tp.subj)T2.subj=tp.subj}}catch(e){}
+function tmPersist(){try{localStorage.setItem("yks-timer",JSON.stringify({el:T2.el,run:T2.run,t0:T2.t0,subj:T2.subj,sd:T2.sd}))}catch(e){}}
+try{var tp=JSON.parse(localStorage.getItem("yks-timer")||"null");if(tp&&typeof tp.el==="number"){T2.el=tp.el;T2.run=!!tp.run;T2.t0=tp.t0||Date.now();if(tp.sd)T2.sd=tp.sd;if(tp.subj)T2.subj=tp.subj}}catch(e){}
 var _tt=tmToggle,_ts=tmSave,_tr=tmReset;
 tmToggle=function(){_tt();tmPersist()};tmSave=function(){_ts();tmPersist()};tmReset=function(){_tr();tmPersist()};
 $("home2").addEventListener("change",function(e){if(e.target.id==="tmSubj")tmPersist()});
@@ -1571,6 +1573,33 @@ document.addEventListener("click",function(e){var el=e.target.closest("[data-act
   case"avShuf":avSet({shuffle:true});break;
   case"avClr":avSet({img:null});break;
   case"adav":api("admin_avatar",{pw:AD.pw,user:a[2],mode:a[1]}).then(function(r){alert(r.ok?"Tamam.":(r.error==="Bilinmeyen işlem"?"Apps Script kodunu güncelleyip yeniden dağıtman gerekiyor.":(r.error||"Hata")));if(r.ok)loadAdmin()});break}});
+
+/* ===== v16: hafta başlangıcı ayarı (zorunlu ilk seçim), sayaç başlangıç günü, manuel soru satırları ===== */
+function setDN(){DN.length=0;for(var i=0;i<7;i++)DN.push(GUN[(S.cfg.ws+i)%7])}
+function wkDays(off){var dow=(new Date().getDay()-S.cfg.ws+7)%7,a=[];for(var i=0;i<7;i++)a.push(addDays(-dow+7*off+i));return a}
+function cfgWeek(off){var w=wkDays(off);return{from:w[0],to:w[6]}}
+var _en5=ensure;ensure=function(){_en5();setDN()};ensure();
+$("cfgWs").onchange=function(){S.cfg.ws=+this.value;S.cfg.wsSet=true;setDN();save();cfgFill();renderAll()};
+$("cfgWe").onchange=function(){S.cfg.ws=(+this.value+1)%7;S.cfg.wsSet=true;setDN();save();cfgFill();renderAll()};
+
+/* ilk girişte hafta başlangıcı seçimi zorunlu */
+var WKSEL=null,bootDone=false,_rc=reconcile;
+reconcile=async function(r,u){await _rc(r,u);bootDone=true};
+function wkAsk(){var el=$("wk");WKSEL=null;el.classList.remove("hide");
+ el.innerHTML='<div class="ws-c"><div class="ws-t2" style="font-size:1.1rem;letter-spacing:.2em">HAFTA AYARI</div><div class="ws-h" style="font-size:1.5rem;font-weight:800;margin:14px 0 6px">Haftan hangi gün başlıyor?</div><div class="ws-s" style="margin:0 0 14px;animation-delay:.2s">Program, özet ve sıralama bu güne göre her hafta yenilenir. Sonradan Ayarlar’dan değiştirebilirsin.</div><div class="wk-g">'+[1,2,3,4,5,6,0].map(function(g){return'<button class="wk-b" data-act="wkp:'+g+'">'+GUN[g]+'</button>'}).join("")+'</div><button class="ws-btn" id="wkOk" data-act="wkok" disabled style="opacity:.4">Kaydet</button></div>'}
+(function(){var n=0,t0=Date.now(),iv=setInterval(function(){n++;if(n>80||S.cfg.wsSet)return clearInterval(iv);
+ if($("auth").classList.contains("hide")&&(bootDone||Date.now()-t0>6000)){clearInterval(iv);if(!S.cfg.wsSet)wkAsk()}},1000)})();
+document.addEventListener("click",function(e){var el=e.target.closest("[data-act]");if(!el)return;var a=el.getAttribute("data-act").split(":");
+ if(a[0]==="wkp"){WKSEL=+a[1];[].forEach.call(document.querySelectorAll(".wk-b"),function(b){b.classList.toggle("on",b.getAttribute("data-act")==="wkp:"+WKSEL)});var ok=$("wkOk");ok.disabled=false;ok.style.opacity=1}
+ else if(a[0]==="wkok"&&WKSEL!==null){S.cfg.ws=WKSEL;S.cfg.wsSet=true;setDN();save();$("wk").classList.add("hide");renderAll()}});
+
+/* sayaç: başlattığın güne kaydedilir */
+var _tt2=tmToggle;tmToggle=function(){if(!T2.run&&!T2.el)T2.sd=iso(new Date());_tt2()};
+
+/* manuel soru ve süre: ders adıyla ayrı satırlar */
+function manualSum(d){var q=S.sorular.filter(function(s){return s.rk&&s.rk.indexOf("m|"+d+"|")===0}),mn=S.logs.filter(function(l){return l.rk&&l.rk.indexOf("mn|")===0&&l.date===d});
+ return q.map(function(s){return'<div class="task"><div class="t"><div>'+esc(s.ders)+'</div><small>'+s.n+' soru'+(s.d!=null?' · '+s.d+' D · '+Math.max(0,s.n-s.d)+' Y':'')+(s.b?' · '+s.b+' B':'')+'</small></div><button class="ghost sm" data-act="sg:'+d+'">Düzenle</button></div>'}).join("")+
+  mn.map(function(l){return'<div class="task"><div class="t"><div>'+esc(l.subj)+'</div><small>'+Math.round(l.sec/60)+' dk süre</small></div><button class="ghost sm" data-act="mnd:'+esc(l.rk)+'">Sil</button></div>'}).join("")}
 
 buildForm();renderAll();
 boot();
