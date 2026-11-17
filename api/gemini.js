@@ -27,6 +27,10 @@ async function callGemini(model, key, body, ms) {
 }
 
 module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type,x-token');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(204).end();
   const key = process.env.GEMINI_API_KEY;
 
   if (req.method === 'GET') {
