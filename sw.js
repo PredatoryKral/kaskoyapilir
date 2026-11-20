@@ -23,3 +23,16 @@ self.addEventListener('fetch', (e) => {
     })
   );
 });
+
+self.addEventListener('push', (e) => {
+  let d = { title: 'KASKO YAPILIR', body: '' };
+  try { d = e.data.json(); } catch (x) {}
+  e.waitUntil(self.registration.showNotification(d.title, { body: d.body, icon: 'icon-180.png', badge: 'icon-180.png', data: { url: d.url || './' } }));
+});
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then((l) => {
+    for (const c of l) if ('focus' in c) return c.focus();
+    return clients.openWindow((e.notification.data && e.notification.data.url) || './');
+  }));
+});
