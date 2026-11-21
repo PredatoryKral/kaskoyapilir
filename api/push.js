@@ -15,6 +15,8 @@ const MSG = [
   'Bir soru çöz, dünya yıkılmaz. Çözmezsen de yıkılmaz ama sen yıkılırsın.',
 ];
 
+const QUOTES = ["Disiplin, canın istemediğinde de yapmaktır.","Bugün yaptığın 10 soru, yarın pişman olacağın 10 saattir.","Motivasyon gelip geçer, alışkanlık kalır.","Deneme yanlış yapar, sınav yanlış affetmez.","Yorgunluk geçer, pişmanlık geçmez.","Telefon kaydırarak mezun olan görülmedi.","Başlamak için mükemmel olmayı bekleme; başla, mükemmelleşirsin.","Bugün ekmediğini sınavda biçemezsin.","Kolay yol yok ama kısa yol var: istikrar.","Yanlış yaptığın soru, sınavda doğru yapacağın sorudur.","Küçük adımlar bile hiç yürümemekten hızlıdır.","Erteleme tuşu seni üniversiteye götürmez.","Netin, harcadığın zamanın aynasıdır.","Bugünün yorgunluğu, sınav günü gülümsemendir.","Hayal kuran çok, plan yapan az, uygulayan çok daha az.","Önce soruyu çöz, sonra çözümü merak et.","Sınav günü motivasyon konuşması yapılmaz, sadece soru çözülür."];
+
 async function apps(payload) {
   const r = await fetch(APPS_URL, { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
   return r.json();
@@ -30,14 +32,16 @@ module.exports = async (req, res) => {
   }
   webpush.setVapidDetails('mailto:admin@kasko.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
   const test = q.test === '1';
-  const t = await apps({ action: 'push_targets', secret: process.env.PUSH_SECRET, all: test });
+  const t = await apps({ action: 'push_targets', secret: process.env.PUSH_SECRET, all: true });
   if (!t.ok) return res.status(502).json({ error: t.error || 'Apps Script hatasi (yeni kodu dagittin mi?)' });
   const day = new Date().getDate();
   let sent = 0;
   const dead = [];
   for (const x of t.targets) {
-    const body = ((test ? 'Test bildirimi. ' : '') + MSG[(day + x.u.length) % MSG.length] + ' ' +
-      (x.open > 0 ? x.open + ' ödev/rutin açık. ' : '') + (x.none ? 'Bugün süre ya da soru girişi yok.' : '')).trim();
+    const k = day + x.u.length;
+    const q = QUOTES[k % QUOTES.length];
+    const head = x.open > 0 || x.none ? MSG[k % MSG.length] : 'Bugünkü işler tamam, helal.';
+    const body = ((test ? 'Test bildirimi. ' : '') + head + ' ' + (x.open > 0 ? x.open + ' ödev/rutin açık. ' : '') + (x.none ? 'Bugün süre ya da soru girişi yok. ' : '') + 'Günün sözü: “' + q + '”').trim();
     for (const s of x.subs) {
       try {
         await webpush.sendNotification(s, JSON.stringify({ title: 'KASKO YAPILIR', body, url: './' }));
