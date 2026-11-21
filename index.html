@@ -248,6 +248,13 @@ input[type=file]{color:var(--mut);font-size:.85rem;min-height:0}input[type=file]
 @keyframes gcRing{0%{transform:scale(.4);opacity:.9}100%{transform:scale(3);opacity:0}}@keyframes gcSp{100%{transform:rotate(var(--a)) translateY(-130px);opacity:0}}@keyframes gcOut{0%,80%{opacity:1}100%{opacity:0}}
 .ws-days{display:flex;gap:8px;align-items:flex-end;height:140px;margin-top:20px}.ws-days div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;width:34px}.ws-days i{display:block;width:100%;height:0;background:#fff;border-radius:6px 6px 0 0;animation:wsh 1s .3s forwards}.ws-days span{font-size:.7rem;opacity:.7;margin-top:4px}@keyframes wsh{to{height:var(--h)}}
 @media (min-width:768px){#aOut svg{width:100%!important;min-width:0!important;height:240px!important}}
+input[type=text],input[type=number],input[type=date],input[type=password],select,textarea{border:1px solid rgba(128,128,136,.5)!important}
+.mo{padding:6px 8px;background:none;box-shadow:none;color:var(--mut);flex:none}
+button[data-m^="del"],button[data-m="lgdel"],#dDel{color:var(--bad)!important}
+.pn-bell{animation:bellRing 1.4s ease-in-out infinite;transform-origin:50% 8%;color:#fff}
+.pn-card{margin-top:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:12px 16px;text-align:left;animation:wsin .8s .4s both,pnSlide 3s 1.4s ease-in-out infinite}
+@keyframes bellRing{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(14deg)}20%{transform:rotate(-12deg)}30%{transform:rotate(8deg)}40%{transform:rotate(-6deg)}}
+@keyframes pnSlide{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 </style>
 </head>
 <body data-tab="plan">
@@ -286,7 +293,7 @@ input[type=file]{color:var(--mut);font-size:.85rem;min-height:0}input[type=file]
     <div id="todayProg"></div>
     <div class="card" id="dsCard"><h2>Fotoğraftan ödev ekle</h2>
       <p style="margin:0 0 8px;color:var(--mut);font-size:.9rem">Dershane sitesinin ekran görüntüsünü, defter fotoğrafını ya da PDF’i yükle (birden fazla olabilir) ya da metni yapıştır. Gemini ödevleri ayıklayıp listeye ekler; eklemeden önce kontrol edersin.</p>
-      <div class="row"><input type="file" id="dsIn" accept="image/*,application/pdf,text/plain" multiple></div>
+      <div class="row"><input type="file" id="dsIn" accept="image/*,video/*,application/pdf,text/plain" multiple></div>
       <textarea id="dsTxt" rows="3" placeholder="Veya ödev metnini buraya yapıştır"></textarea>
       <div class="row"><button id="dsGo">Ödevleri ayıkla</button></div><div id="dsMsg" style="color:var(--mut);font-size:.88rem"></div><div id="dsPrev"></div>
     </div>
@@ -421,8 +428,8 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(win
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
-function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return iso(d)}
-var T=iso(new Date()),TM=addDays(1);
+function addDays(n){var d=now6();d.setDate(d.getDate()+n);return iso(d)}
+var T=iso(now6()),TM=addDays(1);
 $("today").textContent=new Date().toLocaleDateString("tr-TR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 
 var GENEL="Genel çalışma";
@@ -488,8 +495,8 @@ function fmt(s){s=Math.floor(s);function p(n){return String(n).padStart(2,"0")}r
 $("startBtn").onclick=function(){
  if(startAt===null){startAt=Date.now();$("startBtn").textContent="Bitir ve kaydet";iv=setInterval(function(){$("clock").textContent=fmt((Date.now()-startAt)/1000)},500)}
  else{var sec=(Date.now()-startAt)/1000;clearInterval(iv);startAt=null;$("startBtn").textContent="Başlat";$("clock").textContent="00:00:00";
-  if(sec>=10){S.logs.push({date:iso(new Date()),subj:$("tSubj").value,sec:sec});save();renderPlan()}}};
-$("addMan").onclick=function(){var v=parseInt(prompt("Kaç dakika çalıştın?"),10);if(v>0){S.logs.push({date:iso(new Date()),subj:$("tSubj").value,sec:v*60});save();renderPlan()}};
+  if(sec>=10){S.logs.push({date:iso(now6()),subj:$("tSubj").value,sec:sec});save();renderPlan()}}};
+$("addMan").onclick=function(){var v=parseInt(prompt("Kaç dakika çalıştın?"),10);if(v>0){S.logs.push({date:iso(now6()),subj:$("tSubj").value,sec:v*60});save();renderPlan()}};
 
 /* deneme girişi */
 var types=Object.keys(EXAMS);
@@ -573,7 +580,7 @@ ensure();
 var GUN=["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"],ORD=[1,2,3,4,5,6,0];
 var TABS=["plan","calis","prog","deneme","analiz","yan","konu","yedek"];
 function fillSel(id,a,all){$(id).innerHTML=(all?'<option value="">Tüm dersler</option>':'')+a.map(function(s){return'<option>'+esc(s)+'</option>'}).join("")}
-fillSel("pSubj",["Genel"].concat(SUBJ));fillSel("yDers",SUBJ);fillSel("yFilt",SUBJ,true);$("pDay").value=String(new Date().getDay());
+fillSel("pSubj",["Genel"].concat(SUBJ));fillSel("yDers",SUBJ);fillSel("yFilt",SUBJ,true);$("pDay").value=String(now6().getDay());
 $("tabs").onclick=function(e){var t=e.target.getAttribute("data-t");if(!t)return;
  TABS.forEach(function(k){$(k).classList.toggle("hide",k!==t)});
  Array.prototype.forEach.call($("tabs").children,function(b){b.classList.toggle("on",b.getAttribute("data-t")===t)});
@@ -582,7 +589,7 @@ $("tabs").onclick=function(e){var t=e.target.getAttribute("data-t");if(!t)return
 function byTime(a,b){return(a.time||"99")>(b.time||"99")?1:-1}
 function renderYks(){var d=Math.ceil((new Date(S.yks+"T09:00:00")-new Date())/864e5);$("sYks").textContent=(d>0?d:0)+" gün"}
 $("yksCard").onclick=function(){var v=prompt("YKS tarihi (YYYY-AA-GG):",S.yks);if(v&&/^\d{4}-\d{2}-\d{2}$/.test(v)){S.yks=v;save();renderYks()}};
-function renderToday(){var l=(S.program[new Date().getDay()]||[]).slice().sort(byTime);
+function renderToday(){var l=(S.program[now6().getDay()]||[]).slice().sort(byTime);
  $("todayProg").innerHTML=l.length?'<div class="card"><h2> Bugünün programı</h2>'+l.map(function(x){return'<div class="task"><div class="t"><b>'+esc(x.time||"—")+'</b> <span class="tag">'+esc(x.subj)+'</span>'+esc(x.note)+'</div></div>'}).join("")+'</div>':""}
 var _rp=renderPlan;renderPlan=function(){_rp();renderToday();renderYks()};
 
@@ -628,7 +635,7 @@ var _ra=renderAnaliz;renderAnaliz=function(){_ra();var l=pick();if($("aType").va
  $("aOut").insertAdjacentHTML("beforeend",'<h3>Yaklaşık TYT puanı</h3><span class="pill">≈ '+Math.round(100+a*3.3)+'</span><br><small style="color:var(--mut)">Çok kaba bir tahmin (100 + ortalama net × 3,3). Gerçek puan ÖSYM’nin her yıl değişen hesabına bağlı; sıralamayı bu sayfa hesaplayamaz.</small>')}};
 $("aType").onchange=renderAnaliz;$("aN").onchange=renderAnaliz;
 
-function logSec(sec){if(sec>=10){S.logs.push({date:iso(new Date()),subj:$("tSubj").value,sec:sec});save();renderPlan()}}
+function logSec(sec){if(sec>=10){S.logs.push({date:iso(now6()),subj:$("tSubj").value,sec:sec});save();renderPlan()}}
 function resetClock(){$("startBtn").textContent="Başlat";$("clock").textContent="00:00:00"}
 var pm=null;
 function tick(){var left=pm.len-(Date.now()-pm.start);
@@ -651,7 +658,7 @@ $("bkIn").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileRea
 var dsImgs=[],dsDoc="",dsItems=[];
 $("dsIn").onchange=async function(){dsImgs=[];dsDoc="";dsItems=[];$("dsPrev").innerHTML="";var fs=Array.prototype.slice.call(this.files);if(!fs.length)return;$("dsMsg").textContent="Dosyalar okunuyor…";
  for(var i=0;i<fs.length;i++){var f=fs[i];
-  if(f.type.indexOf("image/")===0)dsImgs.push(f);
+  if(f.type.indexOf("image/")===0)dsImgs.push(f);else if(f.type.indexOf("video/")===0){try{dsImgs=dsImgs.concat(await videoFrames(f))}catch(e){}}
   else if(f.type==="application/pdf"){try{if(!window.pdfjsLib)throw 0;pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
    var pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,txt="",n=Math.min(pdf.numPages,6);
    for(var p=1;p<=n;p++){var c=await(await pdf.getPage(p)).getTextContent();txt+=c.items.map(function(x){return x.str}).join(" ")+"\n"}
@@ -668,7 +675,7 @@ $("dsGo").onclick=async function(){
  var opts={cache:false},lim=null;try{lim=await sample.limits()}catch(e){}
  if(dsImgs.length){if(lim&&lim.images)opts.images=dsImgs.slice(0,(lim.images.max||4));else if(!txt){$("dsMsg").textContent="Bu görünümde görsel gönderilemiyor. Ödev metnini yapıştırmayı dene.";return}}
  $("dsMsg").textContent="Gemini ödevleri okuyor…";$("dsGo").disabled=true;
- var pr="Bir ödev listesinden, dershane sitesi ekran görüntüsünden ya da defter fotoğrafından (metin ve/veya görsel) ödevleri çıkar. Her ödevde soru sayısı yazıyorsa soru alanına yaz, yoksa 0. Bugün "+T+" ("+GUN[new Date().getDay()]+"). Her ödev için: baslik (kısa; ne yapılacağı, sayfa/soru bilgisiyle), ders (şunlardan en uygun biri ya da boş bırak: "+SUBJ.join(", ")+"), teslim_metin (belgede teslim için yazan tarih ya da gün ifadesi AYNEN, örn. 12.11 ya da Perşembe; yazmıyorsa boş bırak), teslim (YYYY-MM-DD; sadece emin olduğunda yaz, değilse boş). Takvim: "+calStr()+". Teslim tarihini ASLA tahmin etme, belgede yazanı kullan. gunler: ödevin yazıldığı gün adları (birden fazla olabilir; belgede yoksa boş dizi). Bir fotoğrafta birden fazla günün programı varsa her günün ödevlerini ayrı ödev olarak yaz. Ödevde doğru/yanlış/boş sayısı yazıyorsa dogru, yanlis, bos alanlarına sayı olarak yaz, yoksa null. Ödev olmayan bilgileri alma. SADECE JSON döndür: {\"odevler\":[{\"baslik\":\"\",\"ders\":\"\",\"teslim\":\"\",\"teslim_metin\":\"\",\"gunler\":[],\"soru\":0,\"dogru\":null,\"yanlis\":null,\"bos\":null}]}"+(txt?"\n\nMETİN:\n"+txt.slice(0,9000):"");
+ var pr="Bir ödev listesinden, dershane sitesi ekran görüntüsünden ya da defter fotoğrafından (metin ve/veya görsel) ödevleri çıkar. Her ödevde soru sayısı yazıyorsa soru alanına yaz, yoksa 0. Bugün "+T+" ("+GUN[now6().getDay()]+"). Her ödev için: baslik (kısa; ne yapılacağı, sayfa/soru bilgisiyle), ders (şunlardan en uygun biri ya da boş bırak: "+SUBJ.join(", ")+"), teslim_metin (belgede teslim için yazan tarih ya da gün ifadesi AYNEN, örn. 12.11 ya da Perşembe; yazmıyorsa boş bırak), teslim (YYYY-MM-DD; sadece emin olduğunda yaz, değilse boş). Takvim: "+calStr()+". Teslim tarihini ASLA tahmin etme, belgede yazanı kullan. gunler: ödevin hangi gün başlığının ya da sütununun altında yazdığı (Pazartesi, Salı gibi gün adları; birden fazla olabilir). Görsel haftalık program ya da gün başlıklı bir tablo/defterse HER ödev için gunler ZORUNLUDUR, asla boş bırakma ve hepsini aynı güne yazma. Belgede gün adı hiç yoksa boş dizi. Bir fotoğrafta birden fazla günün programı varsa her günün ödevlerini ayrı ödev olarak yaz. Ödevde doğru/yanlış/boş sayısı yazıyorsa dogru, yanlis, bos alanlarına sayı olarak yaz, yoksa null. Ödev olmayan bilgileri alma. SADECE JSON döndür: {\"odevler\":[{\"baslik\":\"\",\"ders\":\"\",\"teslim\":\"\",\"teslim_metin\":\"\",\"gunler\":[],\"soru\":0,\"dogru\":null,\"yanlis\":null,\"bos\":null}]}"+(txt?"\n\nMETİN:\n"+txt.slice(0,9000):"");
  try{var r=await sample.json(pr,opts);dsItems=(r.odevler||[]).filter(function(o){return o&&o.baslik}).map(function(o){return detectItem(o)});renderPrev();$("dsMsg").textContent=dsItems.length?dsItems.length+" ödev bulundu. Kontrol et, istemediklerin varsa işareti kaldır.":"Ödev bulunamadı. Daha net bir görsel ya da metin dene."}
  catch(e){$("dsMsg").textContent="Ödevler okunamadı. Tekrar dene ya da elle ekle."}
  $("dsGo").disabled=false};
@@ -688,7 +695,7 @@ $("tabs").addEventListener("click",function(e){var b=e.target.closest("button");
 function trow(t){return'<div class="task"><input type="checkbox" data-c="'+t.id+'"><div class="t"><div>'+esc(t.title)+'</div><small>'+(t.subj?'<span class="tag">'+esc(t.subj)+'</span>':"")+t.due.slice(8)+"."+t.due.slice(5,7)+'</small></div></div>'}
 function renderToday(){
  var op=S.tasks.filter(function(t){return!t.done}),od=op.filter(function(t){return t.due<T}),a=op.filter(function(t){return t.due===T}),b=op.filter(function(t){return t.due===TM});
- var pg=(S.program[new Date().getDay()]||[]).slice().sort(byTime);
+ var pg=(S.program[now6().getDay()]||[]).slice().sort(byTime);
  function sec(title,l,empty,cls){return'<div class="grp '+(cls||"")+'">'+title+' ('+l.length+')</div>'+(l.length?l.map(trow).join(""):'<div class="empty">'+empty+'</div>')}
  $("todayProg").innerHTML='<div class="card hero"><h2> Yapılacaklar</h2>'+(od.length?sec(" Gecikmiş",od,"","bad"):"")+sec("Bugün",a,"Bugün için bekleyen ödev yok ")+sec("Yarın",b,"Yarın için ödev yok ")+
   (pg.length?'<div class="grp"> Bugünün programı</div>'+pg.map(function(x){return'<div class="task"><div class="t"><b>'+esc(x.time||"—")+'</b> <span class="tag">'+esc(x.subj)+'</span>'+esc(x.note)+'</div></div>'}).join(""):"")+'</div>'}
@@ -716,9 +723,9 @@ function renderProg(){$("pList").innerHTML=ORD.map(function(g){var l=(S.program[
  return'<div class="card"><h3 style="margin-top:0">'+GUN[g]+'</h3>'+(l.length?l.map(function(x){return'<div class="task"><div class="t"><b>'+esc(x.time||"—")+'</b> <span class="tag">'+esc(x.subj)+'</span>'+dtag(x)+esc(x.note)+'</div><button class="x" data-pd="'+g+'|'+x.id+'">✕</button></div>'}).join(""):'<div class="empty">Boş</div>')+'</div>'}).join("")}
 function renderToday(){
  var op=S.tasks.filter(function(t){return!t.done}),od=op.filter(function(t){return t.due<T}),a=op.filter(function(t){return t.due===T}),b=op.filter(function(t){return t.due===TM});
- var pg=(S.program[new Date().getDay()]||[]).filter(function(x){return pvis(x)&&!x.tid&&(!x.date||x.date===T)}).sort(byTime);
+ var pg=(S.program[now6().getDay()]||[]).filter(function(x){return pvis(x)&&!x.tid&&(!x.date||x.date===T)}).sort(byTime);
  function sec(title,l,empty,cls){return'<div class="grp '+(cls||"")+'">'+title+' ('+l.length+')</div>'+(l.length?l.map(trow).join(""):'<div class="empty">'+empty+'</div>')}
- var thu=(new Date().getDay()===4&&S.lastDs!==T&&typeof claude!=="undefined")?'<div class="task"><div class="t"><b> Perşembe: dershane ödevlerini yükleme günü</b></div><button id="thuBtn">Yükle</button></div>':"";
+ var thu=(now6().getDay()===4&&S.lastDs!==T&&typeof claude!=="undefined")?'<div class="task"><div class="t"><b> Perşembe: dershane ödevlerini yükleme günü</b></div><button id="thuBtn">Yükle</button></div>':"";
  $("todayProg").innerHTML='<div class="card hero"><h2> Yapılacaklar</h2>'+thu+(od.length?sec(" Gecikmiş",od,"","bad"):"")+sec("Bugün",a,"Bugün için bekleyen ödev yok ")+sec("Yarın",b,"Yarın için ödev yok ")+
   (pg.length?'<div class="grp"> Bugünün programı</div>'+pg.map(function(x){return'<div class="task"><div class="t"><b>'+esc(x.time||"—")+'</b> <span class="tag">'+esc(x.subj)+'</span>'+esc(x.note)+'</div></div>'}).join(""):"")+'</div>'}
 $("todayProg").addEventListener("click",function(e){if(e.target.id==="thuBtn")document.querySelector('#tabs [data-t="ders"]').click()});
@@ -857,9 +864,9 @@ async function push(exp){
  if(!getToken()||!ME)return;
  if(pushing){scheduleSync();return}
  pushing=true;
- try{var r=await api("save",{data:JSON.stringify(S),export:!!exp});
+ try{var r=await api("save",{data:JSON.stringify(S),export:!!exp,base:Number(lsGet("yks-lastsync")||0)});
   if(r.ok){lsSet("yks-lastsync",String(r.t));setDirty(false);syMsg("Eşitlendi  "+new Date().toLocaleString("tr-TR"))}
-  else if(r.auth===false){showAuth("Oturum süresi doldu, tekrar giriş yap.")}
+  else if(r.conflict){applyServer(r);toast("Başka cihazdaki değişiklikler yüklendi. Son değişikliğini tekrar yapman gerekebilir.")}else if(r.auth===false){showAuth("Oturum süresi doldu, tekrar giriş yap.")}
   else syMsg("Eşitlenemedi: "+(r.error||"bilinmeyen hata"))}
  catch(e){syMsg("Çevrimdışı: değişiklikler bu cihazda, bağlanınca eşitlenecek.")}
  pushing=false}
@@ -922,7 +929,7 @@ TABS.push("sira","ozet","admin");
 
 /* yardımcılar */
 function opts(a,sel,none){if(sel&&a.indexOf(sel)<0)a=a.concat([sel]);return(none?'<option value="">'+none+'</option>':'')+a.map(function(s){return'<option'+(s===sel?' selected':'')+'>'+esc(s)+'</option>'}).join("")}
-function wkDays(off){var dow=(new Date().getDay()+6)%7,a=[];for(var i=0;i<7;i++)a.push(addDays(-dow+7*off+i));return a}
+function wkDays(off){var dow=(now6().getDay()+6)%7,a=[];for(var i=0;i<7;i++)a.push(addDays(-dow+7*off+i));return a}
 var DN=["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
 function fd(d){return d.slice(8)+"."+d.slice(5,7)}
 function fmtMin(m){m=Math.round(m);return m>=60?Math.floor(m/60)+" sa "+(m%60)+" dk":m+" dk"}
@@ -969,7 +976,7 @@ function tmLabel(){var t=T2.run?"Durdur":(T2.el>0?"Devam":"Başlat");["tmTb","fs
 function tmTick(){var c=fmt(tmNow());["tmClock","fsClock"].forEach(function(i){if($(i))$(i).textContent=c})}
 setInterval(tmTick,250);
 function tmToggle(){if(T2.run){T2.el=tmNow();T2.run=false}else{T2.t0=Date.now();T2.run=true}tmLabel();tmTick()}
-function tmSave(){var s=tmNow();if(s<10){alert("10 saniyeden kısa süre kaydedilmez.");return}S.logs.push({date:T2.sd||iso(new Date()),subj:T2.subj,sec:s,a:T2.st||Date.now()-s*1000,b:Date.now()});T2.el=0;T2.run=false;save();renderHome();tmLabel();tmTick()}
+function tmSave(){var s=tmNow();if(s<10){alert("10 saniyeden kısa süre kaydedilmez.");return}S.logs.push({date:T2.sd||iso(now6()),subj:T2.subj,sec:s,a:T2.st||Date.now()-s*1000,b:Date.now()});T2.el=0;T2.run=false;save();renderHome();tmLabel();tmTick()}
 function tmReset(){if(tmNow()>60&&!confirm("Sayaç kaydedilmeden sıfırlansın mı?"))return;T2.el=0;T2.run=false;tmLabel();tmTick()}
 async function fsOpen(){$("fsT").classList.remove("hide");tmLabel();tmTick();try{if(navigator.wakeLock)wl2=await navigator.wakeLock.request("screen")}catch(e){}try{await document.documentElement.requestFullscreen()}catch(e){}}
 function fsClose(){$("fsT").classList.add("hide");try{if(wl2){wl2.release();wl2=null}if(document.fullscreenElement)document.exitFullscreen()}catch(e){}}
@@ -1112,7 +1119,7 @@ function resInfo(k){if(k.charAt(0)==="t"){var t=S.tasks.filter(function(x){retur
 function trow2(t){var k="t"+t.id;return'<div class="task'+(t.done?" done":"")+'"><input type="checkbox" '+(t.done?"checked":"")+' data-c="'+t.id+'"><div class="t"><div data-act="edt:'+t.id+'" style="cursor:pointer">'+esc(t.title)+(t.n?' · '+t.n+' soru':'')+'</div><small>'+(t.subj?'<span class="tag">'+esc(t.subj)+'</span>':"")+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+"Sonuç gir"+'</button></div>'}
 function rrow(r,d){var k=r.id+"|"+d,dn=!!S.rdone[k];return'<div class="task'+(dn?" done":"")+'"><input type="checkbox" '+(dn?"checked":"")+' data-rk="'+k+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">'+"Sonuç gir"+'</button></div>'}
 function mResK(k){var i=resInfo(k);if(!i)return;var o=S.res[k]||{},v=function(x){return x!=null?x:""};
- openModal('<h2>'+esc(i.title)+'</h2>'+(i.n?'<div class="empty" style="padding:0 0 8px">Toplam '+i.n+' soru</div>':'')+'<div class="row"><input type="number" id="xD" min="0" placeholder="Doğru" value="'+v(o.d)+'" style="flex:1"><input type="number" id="xY" min="0" placeholder="Yanlış" value="'+v(o.y)+'" style="flex:1"><input type="number" id="xB" min="0" placeholder="Boş" value="'+v(o.b)+'" style="flex:1"></div><div class="row"><input type="number" id="xK" min="0" placeholder="Süre (dk)" value="'+(o.dk||"")+'" style="flex:1">'+(BRANS.indexOf(i.ders)>=0?'<input type="number" step="0.25" id="xNet" placeholder="Net" value="'+(o.net!=null?o.net:"")+'" style="flex:1">':'')+'</div><div class="empty" style="padding:0 0 8px">Süre çalışma süresine eklenir. Sayaçla çalıştıysan boş bırak.</div><div class="row"><button data-m="saveRes" data-k="'+esc(k)+'">Kaydet</button>'+(S.res[k]?'<button class="ghost" data-m="clrRes" data-k="'+esc(k)+'">Sonucu sil</button>':"")+'<button class="ghost" data-m="close">Vazgeç</button></div>')}
+ openModal('<h2>'+esc(i.title)+'</h2>'+(i.n?'<div class="empty" style="padding:0 0 8px">Toplam '+i.n+' soru</div>':'')+'<div class="row"><input type="number" id="xD" min="0" placeholder="Doğru" value="'+v(o.d)+'" style="flex:1"><input type="number" id="xY" min="0" placeholder="Yanlış" value="'+v(o.y)+'" style="flex:1"><input type="number" id="xB" min="0" placeholder="Boş" value="'+v(o.b)+'" style="flex:1"></div><div class="row"><input type="number" id="xK" min="0" placeholder="Süre (dk)" value="'+(o.dk||"")+'" style="flex:1">'+(BRANS.indexOf(i.ders)>=0?'<input type="number" step="0.25" id="xNet" placeholder="Net" value="'+(o.net!=null?o.net:"")+'" style="flex:1">':'')+'</div><div class="empty" style="padding:0 0 8px">Süre çalışma süresine eklenir. Sayaçla çalıştıysan boş bırak.</div><div class="row"><button data-m="saveRes" data-k="'+esc(k)+'">Kaydet</button><button class="ghost" data-m="doneOnly" data-k="'+esc(k)+'">Sadece yaptım</button><button class="ghost" data-m="undone" data-k="'+esc(k)+'">Yapmadım</button>'+(S.res[k]?'<button class="ghost" data-m="clrRes" data-k="'+esc(k)+'">Sonucu sil</button>':"")+'<button class="ghost" data-m="close">Vazgeç</button></div>')}
 function clearRes(k){delete S.res[k];S.sorular=S.sorular.filter(function(s){return s.rk!==k});S.logs=S.logs.filter(function(l){return l.rk!==k})}
 function markDone(k){if(k.charAt(0)==="t")S.tasks.forEach(function(t){if(String(t.id)===k.slice(1))t.done=true});else S.rdone[k]=1}
 function saveRes(k){var i=resInfo(k);if(!i)return;var d=parseInt($("xD").value,10)||0,y=parseInt($("xY").value,10)||0,bs=$("xB").value,b=bs===""?(i.n?Math.max(0,i.n-d-y):0):(parseInt(bs,10)||0),dk=parseInt($("xK").value,10)||0;
@@ -1120,7 +1127,7 @@ function saveRes(k){var i=resInfo(k);if(!i)return;var d=parseInt($("xD").value,1
  if(d+y+b===0&&!dk&&!($("xNet")&&$("xNet").value)){alert("En az bir değer gir.");return}
  clearRes(k);S.res[k]={d:d,y:y,b:b,dk:dk};
  if(d+y>0)S.sorular.push({id:Date.now(),date:T,ders:i.ders||"Genel",n:d+y,d:d,b:b,rk:k});
- if(dk>0)S.logs.push({date:iso(new Date()),subj:i.ders||GENEL,sec:dk*60,rk:k});
+ if(dk>0)S.logs.push({date:iso(now6()),subj:i.ders||GENEL,sec:dk*60,rk:k});
  markDone(k);save();closeModal();rr()}
 
 /* ödev ekle / düzenle */
@@ -1319,7 +1326,7 @@ function detectItem(o){var s=(String(o.teslim_metin||"")+" "+(Array.isArray(o.gu
  var wd0=wkDays(0),wd1=wkDays(1),wk="auto",exact="",m=String(o.teslim_metin||"").match(/(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?/),gd=function(x){return new Date(x+"T12:00:00").getDay()};
  if(!days.length&&m&&+m[2]>=1&&+m[2]<=12&&+m[1]>=1&&+m[1]<=31){var y=m[3]?(m[3].length===2?2000+(+m[3]):+m[3]):new Date().getFullYear(),dd=iso(new Date(y,+m[2]-1,+m[1],12));
   if(wd0.indexOf(dd)>=0)days=[gd(dd)];else if(wd1.indexOf(dd)>=0){days=[gd(dd)];wk=1}else exact=dd}
- if(!days.length&&!exact){var t=/^\d{4}-\d{2}-\d{2}$/.test(String(o.teslim||""))?o.teslim:T;if(wd0.indexOf(t)>=0)days=[gd(t)];else if(wd1.indexOf(t)>=0){days=[gd(t)];wk=1}else exact=t}
+ if(!days.length&&!exact){var t=/^\d{4}-\d{2}-\d{2}$/.test(String(o.teslim||""))?o.teslim:"";if(!t)o.noDay=true;else if(wd0.indexOf(t)>=0)days=[gd(t)];else if(wd1.indexOf(t)>=0){days=[gd(t)];wk=1}else exact=t}
  o.days=days;o.wk=wk;o.exact=exact;return o}
 function renderPrev(){$("dsPrev").innerHTML=dsItems.length?dsItems.map(function(o,i){
  var hasRes=o.dogru!=null||o.yanlis!=null,sel=function(v,t){return'<option value="'+v+'"'+(String(o.wk)===String(v)?" selected":"")+'>'+t+'</option>'},
@@ -1364,13 +1371,13 @@ function localizeBoard(u){var r0=prange(BD.p),inR=function(d){return d>=r0.from&
 
 /* ===== v13: sonuç penceresi (soru sayısı), tikte her zaman sonuç, analiz etiketi ===== */
 function mResK(k){var i=resInfo(k);if(!i)return;var o=S.res[k]||{},v=function(x){return x!=null?x:""},nn=o.n!=null?o.n:(i.n||"");
- openModal('<h2>'+esc(i.title)+'</h2><div class="row"><label style="flex:1;color:var(--mut);font-size:.8rem">Soru sayısı (çözülen)<input type="number" id="xN" min="0" value="'+nn+'" style="width:100%;margin-top:2px"></label></div><div class="row"><input type="number" id="xD" min="0" placeholder="Doğru" value="'+v(o.d)+'" style="flex:1"><input type="number" id="xY" min="0" placeholder="Yanlış" value="'+v(o.y)+'" style="flex:1"><input type="number" id="xB" min="0" placeholder="Boş (otomatik)" value="'+v(o.b)+'" style="flex:1"></div><div class="row"><input type="number" id="xK" min="0" placeholder="Süre (dk)" value="'+(o.dk||"")+'" style="flex:1">'+(BRANS.indexOf(i.ders)>=0?'<input type="number" step="0.25" id="xNet" placeholder="Net" value="'+(o.net!=null?o.net:"")+'" style="flex:1">':'')+'</div><div class="empty" style="padding:0 0 8px">Soru sayısı ödevden gelir; hepsini çözmediysen düzelt. Boş kutusu boşsa kalan sorular boş sayılır ve çözülen soruya eklenmez. Süre çalışma süresine eklenir (sayaçla çalıştıysan boş bırak).</div><div class="row"><button data-m="saveRes" data-k="'+esc(k)+'">Kaydet</button>'+(S.res[k]?'<button class="ghost" data-m="clrRes" data-k="'+esc(k)+'">Sonucu sil</button>':"")+'<button class="ghost" data-m="close">Vazgeç</button></div>')}
+ openModal('<h2>'+esc(i.title)+'</h2><div class="row"><label style="flex:1;color:var(--mut);font-size:.8rem">Soru sayısı (çözülen)<input type="number" id="xN" min="0" value="'+nn+'" style="width:100%;margin-top:2px"></label></div><div class="row"><input type="number" id="xD" min="0" placeholder="Doğru" value="'+v(o.d)+'" style="flex:1"><input type="number" id="xY" min="0" placeholder="Yanlış" value="'+v(o.y)+'" style="flex:1"><input type="number" id="xB" min="0" placeholder="Boş (otomatik)" value="'+v(o.b)+'" style="flex:1"></div><div class="row"><input type="number" id="xK" min="0" placeholder="Süre (dk)" value="'+(o.dk||"")+'" style="flex:1">'+(BRANS.indexOf(i.ders)>=0?'<input type="number" step="0.25" id="xNet" placeholder="Net" value="'+(o.net!=null?o.net:"")+'" style="flex:1">':'')+'</div><div class="empty" style="padding:0 0 8px">Soru sayısı ödevden gelir; hepsini çözmediysen düzelt. Boş kutusu boşsa kalan sorular boş sayılır ve çözülen soruya eklenmez. Süre çalışma süresine eklenir (sayaçla çalıştıysan boş bırak).</div><div class="row"><button data-m="saveRes" data-k="'+esc(k)+'">Kaydet</button><button class="ghost" data-m="doneOnly" data-k="'+esc(k)+'">Sadece yaptım</button><button class="ghost" data-m="undone" data-k="'+esc(k)+'">Yapmadım</button>'+(S.res[k]?'<button class="ghost" data-m="clrRes" data-k="'+esc(k)+'">Sonucu sil</button>':"")+'<button class="ghost" data-m="close">Vazgeç</button></div>')}
 function saveRes(k){var i=resInfo(k);if(!i)return;var N=parseInt($("xN").value,10)||0,d=parseInt($("xD").value,10)||0,y=parseInt($("xY").value,10)||0,bs=$("xB").value,b=bs===""?Math.max(0,N-d-y):(parseInt(bs,10)||0),dk=parseInt($("xK").value,10)||0;
  if(N&&d+y+b>N){alert("Doğru + yanlış + boş toplamı "+N+" soruyu geçemez.");return}
  if(d+y+b===0&&!dk&&!($("xNet")&&$("xNet").value)){alert("En az bir değer gir.");return}
  clearRes(k);S.res[k]={d:d,y:y,b:b,dk:dk,n:N};if($("xNet")&&$("xNet").value!=="")S.res[k].net=parseFloat($("xNet").value);
  if(d+y>0)S.sorular.push({id:Date.now(),date:T,ders:i.ders||"Genel",n:d+y,d:d,b:b,rk:k});
- if(dk>0)S.logs.push({date:iso(new Date()),subj:i.ders||GENEL,sec:dk*60,rk:k});
+ if(dk>0)S.logs.push({date:iso(now6()),subj:i.ders||GENEL,sec:dk*60,rk:k});
  markDone(k);save();closeModal();rr()}
 var _ra3=renderAnaliz;renderAnaliz=function(){_ra3();try{$("aiBtn").textContent="Analiz et · "+$("aN").selectedOptions[0].text.toLowerCase()+" deneme"}catch(e){}};
 $("aType").onchange=renderAnaliz;$("aN").onchange=renderAnaliz;
@@ -1524,7 +1531,7 @@ $("cfgRemOn").onchange=function(){S.cfg.remOn=this.checked;save();renderHome()};
 var _ra5=renderAll;renderAll=function(){_ra5();cfgFill()};
 
 /* haftalık özet */
-function cfgWeek(off){var back=(new Date().getDay()-S.cfg.ws+7)%7,st=plus(T,-back+7*off);return{from:st,to:plus(st,6)}}
+function cfgWeek(off){var back=(now6().getDay()-S.cfg.ws+7)%7,st=plus(T,-back+7*off);return{from:st,to:plus(st,6)}}
 function wkSummary(r){var inR=function(d){return d>=r.from&&d<=r.to},days=[];for(var d=r.from;d<=r.to;d=nextDay(d))days.push(d);
  var logs=S.logs.filter(function(l){return inR(l.date)}),byD={},byDay={};logs.forEach(function(l){var m=l.sec/60;byD[l.subj]=(byD[l.subj]||0)+m;byDay[l.date]=(byDay[l.date]||0)+m});
  var min=sum(logs,function(l){return l.sec/60}),best=days.slice().sort(function(a,b){return(byDay[b]||0)-(byDay[a]||0)})[0],sq=S.sorular.filter(function(s){return inR(s.date)}),kn=sq.filter(function(s){return s.d!=null}),
@@ -1602,7 +1609,7 @@ document.addEventListener("click",function(e){var el=e.target.closest("[data-act
 
 /* ===== v16: hafta başlangıcı ayarı (zorunlu ilk seçim), sayaç başlangıç günü, manuel soru satırları ===== */
 function setDN(){DN.length=0;for(var i=0;i<7;i++)DN.push(GUN[(S.cfg.ws+i)%7])}
-function wkDays(off){var dow=(new Date().getDay()-S.cfg.ws+7)%7,a=[];for(var i=0;i<7;i++)a.push(addDays(-dow+7*off+i));return a}
+function wkDays(off){var dow=(now6().getDay()-S.cfg.ws+7)%7,a=[];for(var i=0;i<7;i++)a.push(addDays(-dow+7*off+i));return a}
 function cfgWeek(off){var w=wkDays(off);return{from:w[0],to:w[6]}}
 var _en5=ensure;ensure=function(){_en5();setDN()};ensure();
 $("cfgWs").onchange=function(){S.cfg.ws=+this.value;S.cfg.wsSet=true;setDN();save();cfgFill();renderAll()};
@@ -1620,7 +1627,7 @@ document.addEventListener("click",function(e){var el=e.target.closest("[data-act
  else if(a[0]==="wkok"&&WKSEL!==null){S.cfg.ws=WKSEL;S.cfg.wsSet=true;setDN();save();$("wk").classList.add("hide");renderAll()}});
 
 /* sayaç: başlattığın güne kaydedilir */
-var _tt2=tmToggle;tmToggle=function(){if(!T2.run&&!T2.el){T2.sd=iso(new Date());T2.st=Date.now()}_tt2()};
+var _tt2=tmToggle;tmToggle=function(){if(!T2.run&&!T2.el){T2.sd=iso(now6());T2.st=Date.now()}_tt2()};
 
 /* manuel soru ve süre: ders adıyla ayrı satırlar */
 function manualSum(d){var q=S.sorular.filter(function(s){return s.rk&&s.rk.indexOf("m|"+d+"|")===0}),mn=S.logs.filter(function(l){return l.rk&&l.rk.indexOf("mn|")===0&&l.date===d});
@@ -1684,7 +1691,7 @@ function bcount(){var n=document.querySelectorAll(".bsel:checked").length;if($("
 document.addEventListener("change",function(e){if(e.target.classList&&e.target.classList.contains("bsel"))bcount()});
 
 /* sıralama: sabit Pazartesi-Pazar haftası, lig ve görevler */
-function monWeek(off){var dow=(new Date().getDay()+6)%7,s=plus(T,-dow+7*off);return{from:s,to:plus(s,6)}}
+function monWeek(off){var dow=(now6().getDay()+6)%7,s=plus(T,-dow+7*off);return{from:s,to:plus(s,6)}}
 function bprange(p){return p==="week"?monWeek(0):p==="last"?monWeek(-1):prange(p)}
 BD.view="rank";BD.champ=null;
 async function loadBoard(){BD.err="";var c=null;try{c=JSON.parse(localStorage.getItem(bdKey(BD.p))||"null")}catch(e){}
@@ -1876,6 +1883,59 @@ async function pushEnable(){try{var p=await Notification.requestPermission();if(
  if(!r.ok){alert(r.error==="Bilinmeyen işlem"?"Apps Script kodunu güncelleyip yeniden dağıtman gerekiyor.":(r.error||"Hata"));return}toast("Bildirimler açıldı");pushState()}catch(e){alert("Bildirim açılamadı: "+((e&&e.message)||"bilinmeyen hata"))}}
 async function pushDisable(){try{var reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){await api("push_unsub",{endpoint:sub.endpoint});await sub.unsubscribe()}toast("Bildirimler kapatıldı");pushState()}catch(e){}}
 setTimeout(pushState,1500);
+
+/* ===== v21 ===== */
+function now6(){return new Date(Date.now()-216e5)}
+setInterval(function(){if(iso(now6())!==T)location.reload()},60000);
+IC.bell='<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>';
+var QUOTES=["Disiplin, canın istemediğinde de yapmaktır.","Bugün yaptığın 10 soru, yarın pişman olacağın 10 saattir.","Motivasyon gelip geçer, alışkanlık kalır.","Deneme yanlış yapar, sınav yanlış affetmez.","Yorgunluk geçer, pişmanlık geçmez.","Telefon kaydırarak mezun olan görülmedi.","Başlamak için mükemmel olmayı bekleme; başla, mükemmelleşirsin.","Bugün ekmediğini sınavda biçemezsin.","Kolay yol yok ama kısa yol var: istikrar.","Yanlış yaptığın soru, sınavda doğru yapacağın sorudur.","Küçük adımlar bile hiç yürümemekten hızlıdır.","Erteleme tuşu seni üniversiteye götürmez.","Netin, harcadığın zamanın aynasıdır.","Bugünün yorgunluğu, sınav günü gülümsemendir.","Hayal kuran çok, plan yapan az, uygulayan çok daha az.","Önce soruyu çöz, sonra çözümü merak et.","Sınav günü motivasyon konuşması yapılmaz, sadece soru çözülür."];
+function remindHtml(){var hr=new Date().getHours();if(!S.cfg.remOn||(hr<S.cfg.rem&&hr>=6))return"";var w0=wkDays(0)[0],
+ un=S.tasks.filter(function(t){return!t.done&&t.due>=w0&&t.due<=T}).length+S.rutin.filter(function(r){return rutDay(r,T)&&!S.rdone[r.id+"|"+T]}).length,none=minsOn(T)===0&&!S.sorular.some(function(s){return s.date===T}),
+ k=now6().getDate()+hash(String(ME)),head=(un||none)?NMSG[k%NMSG.length]:"Bugünkü işler tamam. Kapkapçı Eymen bile ikna oldu.";
+ return'<div class="card" data-n="1" style="margin-bottom:12px"><b>'+head+'</b><div style="color:var(--mut);font-size:.9rem;margin-top:2px">'+(un?un+' ödev/rutin açık. ':'')+(none?'Bugün süre ya da soru girişi yok.':'')+'</div><div style="margin-top:8px;font-size:.9rem"><small style="color:var(--mut)">Günün sözü</small><br><i>“'+QUOTES[k%QUOTES.length]+'”</i></div></div>'}
+
+/* satırlar: ⋯ düğmesi (düzenle / sil) */
+function trow2(t){var k="t"+t.id;return'<div class="task'+(t.done?" done":"")+'"><input type="checkbox" '+(t.done?"checked":"")+' data-c="'+t.id+'"><div class="t"><div data-act="edt:'+t.id+'" style="cursor:pointer">'+esc(t.title)+(t.n?' · '+t.n+' soru':'')+'</div><small>'+(t.subj?'<span class="tag">'+esc(t.subj)+'</span>':"")+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">Sonuç gir</button><button class="mo" data-act="edt:'+t.id+'" title="Düzenle / Sil">'+ic("dots",18)+'</button></div>'}
+function rrow(r,d){var k=r.id+"|"+d,dn=!!S.rdone[k];return'<div class="task'+(dn?" done":"")+'"><input type="checkbox" '+(dn?"checked":"")+' data-rk="'+k+'"><div class="t"><div>'+esc(r.title)+' · '+r.n+' soru</div><small><span class="tag">Rutin</span>'+esc(r.ders)+resTxt(k)+'</small></div><button class="ghost sm" data-act="res:'+k+'">Sonuç gir</button><button class="mo" data-act="edr:'+r.id+'" title="Düzenle / Sil">'+ic("dots",18)+'</button></div>'}
+
+/* ödev ekle: durum + sonuç */
+function mAdd(due){openModal('<h2>Ödev ekle</h2><div class="row"><select id="mD" style="flex:1">'+opts(DERSL(),"","Ders seç")+'</select><input type="number" id="mN" min="1" placeholder="Kaç soru" style="width:110px"></div><input type="text" id="mT" placeholder="Ödev adı (boşsa ders adı yazılır)" style="width:100%;margin-bottom:8px"><div class="row"><input type="date" id="mDue" value="'+(due||T)+'"><button class="ghost sm" data-m="dueT">Bugün</button><button class="ghost sm" data-m="dueTM">Yarın</button></div><div class="row"><select id="mSt" style="flex:1"><option value="0">Durum: Yapmadım</option><option value="1">Durum: Yaptım</option></select></div><div id="mRes" class="hide"><div class="row"><input type="number" id="mRd" min="0" placeholder="Doğru" style="flex:1"><input type="number" id="mRy" min="0" placeholder="Yanlış" style="flex:1"><input type="number" id="mRb" min="0" placeholder="Boş" style="flex:1"></div><div class="empty" style="padding:0 0 6px">Boş bırakırsan sadece “yaptım” işaretlenir.</div></div><div class="row"><button data-m="addTask">Ekle</button><button class="ghost" data-m="photo">Fotoğraf / video</button><button class="ghost" data-m="close">Vazgeç</button></div>')}
+$("mdl").addEventListener("change",function(e){if(e.target.id==="mSt")$("mRes").classList.toggle("hide",e.target.value!=="1")});
+function addTaskV2(){var ders=$("mD").value,n=parseInt($("mN").value,10)||0,ti=$("mT").value.trim();if(!ders&&!ti){alert("Ders seç ya da ödev adı yaz.");return}if(!ti)ti=ders+" ödevi";
+ var t={id:Date.now(),title:ti,subj:ders,due:$("mDue").value||T,done:false};if(n>0)t.n=n;S.tasks.push(t);
+ if($("mSt").value==="1"){var d=parseInt($("mRd").value,10)||0,y=parseInt($("mRy").value,10)||0,bs=$("mRb").value,b=bs===""?(n>0?Math.max(0,n-d-y):0):(parseInt(bs,10)||0);if(d+y+b>0)putRes("t"+t.id,ders,d,y,b,0);markDone("t"+t.id)}
+ save();closeModal();rr()}
+function unmark(k){if(k.charAt(0)==="t")S.tasks.forEach(function(t){if(String(t.id)===k.slice(1))t.done=false});else delete S.rdone[k]}
+$("mdl").addEventListener("click",function(e){var b=e.target.closest("[data-m]");if(!b)return;var m=b.getAttribute("data-m"),k=b.getAttribute("data-k");
+ if(m==="doneOnly"){clearRes(k);markDone(k);save();closeModal();rr()}else if(m==="undone"){clearRes(k);unmark(k);save();closeModal();rr()}});
+
+/* fotoğraf: gün seçilmemişse uyar, video desteği */
+var _rpv=renderPrev;renderPrev=function(){_rpv();dsItems.forEach(function(o,i){if(o.noDay){var c=$("dsPrev").querySelector('input.pdc[data-i="'+i+'"]');if(c)c.closest(".row").insertAdjacentHTML("afterend",'<div class="empty" style="padding:4px 0;color:var(--bad)">Gün bulunamadı, günleri sen seç.</div>')}})};
+var _dsa=$("dsPrev").onclick;$("dsPrev").onclick=function(e){if(e.target.id==="dsAdd"){var P=$("dsPrev"),bad=0;[].forEach.call(P.querySelectorAll("input[data-pi]"),function(cb){if(!cb.checked)return;var i=cb.getAttribute("data-pi");if(!P.querySelector('input.pdx[data-i="'+i+'"]')&&!P.querySelectorAll('input.pdc[data-i="'+i+'"]:checked').length)bad++});if(bad){alert(bad+" ödevde gün seçilmemiş. Günleri işaretleyip tekrar bas.");return}}_dsa.call(this,e)};
+function videoFrames(f,n){n=n||6;return new Promise(function(res,rej){var v=document.createElement("video"),out=[],k=0;v.muted=true;v.playsInline=true;v.preload="auto";v.src=URL.createObjectURL(f);
+ function next(){if(k>=n){URL.revokeObjectURL(v.src);return res(out)}v.currentTime=Math.min((v.duration||1)-.05,(k+.5)*(v.duration||1)/n)}
+ v.onloadedmetadata=function(){next()};v.onerror=function(){rej(new Error("video"))};
+ v.onseeked=function(){var s=Math.min(1,1400/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement("canvas");c.width=v.videoWidth*s;c.height=v.videoHeight*s;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(function(b){out.push(b);k++;next()},"image/jpeg",.8)}})}
+
+/* eşitleme */
+async function syncPull(){if(!getToken()||!ME||pushing)return;try{if(lsGet("yks-dirty")){await push(false);return}var v=await api("ver");if(v.ok&&v.t&&v.t!==Number(lsGet("yks-lastsync")||0)){var r=await api("load");if(r.ok&&r.data)applyServer(r)}}catch(e){}}
+window.addEventListener("focus",syncPull);window.addEventListener("pageshow",syncPull);setInterval(function(){if(document.visibilityState==="visible")syncPull()},20000);
+
+/* haftalık özet kendiliğinden açılır */
+(function(){var n=0,t0=Date.now(),iv=setInterval(function(){n++;if(n>180)return clearInterval(iv);
+ if(!$("auth").classList.contains("hide")||!(bootDone||Date.now()-t0>6000)||!S.cfg.wsSet||!S.cfg.goalSet)return;
+ if(["wk","a2","ws"].some(function(i){return!$(i).classList.contains("hide")}))return;
+ clearInterval(iv);var r=cfgWeek(-1);if(S.cfg.lastWk!==r.from){var s=wkSummary(r);if(s.min>0||s.q>0||s.tk>0)wkOpen(-1)}},1000)})();
+
+/* bildirim tanıtımı (her cihazda bir kez) */
+function showPushIntro(){var ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),sa=window.navigator.standalone||matchMedia("(display-mode: standalone)").matches,sup=("serviceWorker" in navigator)&&("PushManager" in window)&&("Notification" in window);
+ lsSet("yks-push-v1","1");var el=$("a2");el.classList.remove("hide");
+ el.innerHTML='<div class="a2-c"><div class="pn-bell">'+ic("bell",64)+'</div><div class="pn-card"><b>KASKO YAPILIR</b><br><span>Kapkapçı Eymen sizi ayağına çağırıyor.</span></div><div class="ws-h" style="font-size:1.3rem;font-weight:800;margin-top:20px">Akşam hatırlatmaları</div><div class="ws-s" style="margin-top:6px;animation-delay:.2s">'+(sup?'Ödev ya da süre eksikse akşam telefonuna bildirim gelsin.':(ios&&!sa?'iPhone’da bildirim için önce siteyi ana ekrana ekleyip oradan açman gerekiyor.':'Bu tarayıcı bildirimi desteklemiyor.'))+'</div>'+(sup?'<button class="ws-btn" data-act="pnOk">Bildirimleri aç</button>':(ios&&!sa?'<button class="ws-btn" data-act="a2show">Ana ekrana ekleme rehberi</button>':''))+'<button class="ws-lnk" data-act="a2x">Şimdi değil</button></div>'}
+document.addEventListener("click",function(e){var el=e.target.closest("[data-act]");if(!el)return;var a=el.getAttribute("data-act");if(a==="pnOk"){$("a2").classList.add("hide");pushEnable()}else if(a==="a2show")showA2()});
+(function(){var n=0,t0=Date.now(),iv=setInterval(function(){n++;if(n>240||lsGet("yks-push-v1"))return clearInterval(iv);
+ if(!$("auth").classList.contains("hide")||!(bootDone||Date.now()-t0>6000)||!S.cfg.wsSet||!S.cfg.goalSet)return;
+ if(["wk","a2","ws"].some(function(i){return!$(i).classList.contains("hide")}))return;
+ clearInterval(iv);if("Notification" in window&&Notification.permission!=="default"){lsSet("yks-push-v1","1");return}showPushIntro()},1500)})();
 
 buildForm();renderAll();
 boot();
